@@ -1,0 +1,5 @@
+# ignore /docs, /rules, and /tasks folder
+/docs
+/rules
+/tasks
+
