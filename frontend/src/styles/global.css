@@ -1,0 +1,202 @@
+/* Global Styles & Dark Theme */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Dark Theme Colors */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #1a1a2e;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+  
+  /* Accent Colors (matching node types) */
+  --color-analysis: #4ECDC4;
+  --color-decision: #FF6B6B;
+  --color-verification: #95E1D3;
+  --color-alternative: #FFE66D;
+  --color-implementation: #A8E6CF;
+  
+  /* UI Colors */
+  --color-border: #2a2a3e;
+  --color-hover: #3a3a4e;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--text-primary);
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Canvas Container */
+canvas {
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-hover);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-analysis);
+  color: var(--bg-primary);
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--bg-secondary);
+  border-top: 3px solid var(--color-analysis);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Panel Styles */
+.panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.panel-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.panel-content {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Button Styles */
+button {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--color-hover);
+  border-color: var(--color-analysis);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Badge Styles */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-analysis {
+  background-color: var(--color-analysis);
+  color: var(--bg-primary);
+}
+
+.badge-decision {
+  background-color: var(--color-decision);
+  color: var(--text-primary);
+}
+
+.badge-verification {
+  background-color: var(--color-verification);
+  color: var(--bg-primary);
+}
+
+.badge-alternative {
+  background-color: var(--color-alternative);
+  color: var(--bg-primary);
+}
+
+.badge-implementation {
+  background-color: var(--color-implementation);
+  color: var(--bg-primary);
+}
+
