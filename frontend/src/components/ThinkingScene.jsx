@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 
 /**
  * ThinkingScene - Main 3D visualization component for thought nodes
@@ -9,8 +10,12 @@ import { PerspectiveCamera, OrbitControls } from '@react-three/drei'
  * - Dark ambient lighting (#1a1a2e)
  * - Three point lights for depth and dimension
  * - OrbitControls for user interaction
+ * - Bloom post-processing for glowing emissive materials
+ * 
+ * @param {ReactNode} children - Child components to render in the scene
+ * @param {boolean} enableBloom - Enable bloom post-processing (default: true)
  */
-export default function ThinkingScene({ children }) {
+export default function ThinkingScene({ children, enableBloom = true }) {
   return (
     <div style={{ 
       width: '100%', 
@@ -81,6 +86,19 @@ export default function ThinkingScene({ children }) {
 
         {/* Child components (nodes, edges, etc.) will render here */}
         {children}
+
+        {/* Post-processing effects */}
+        {enableBloom && (
+          <EffectComposer>
+            <Bloom
+              intensity={1.5}
+              luminanceThreshold={0.1}
+              luminanceSmoothing={0.9}
+              radius={0.4}
+              mipmapBlur={false}
+            />
+          </EffectComposer>
+        )}
       </Canvas>
     </div>
   )

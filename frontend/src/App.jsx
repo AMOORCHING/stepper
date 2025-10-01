@@ -109,11 +109,12 @@ function TestNodes() {
 
 function App() {
   const [showScene, setShowScene] = useState(false)
+  const [enableBloom, setEnableBloom] = useState(true)
 
   if (showScene) {
     return (
       <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-        <ThinkingScene>
+        <ThinkingScene enableBloom={enableBloom}>
           <TestNodes />
         </ThinkingScene>
         
@@ -134,6 +135,17 @@ function App() {
               <p>✅ Newest node pulsing effect</p>
               <p>✅ Smooth hover scaling (1.3x)</p>
               <p>✅ Edge fade-in animations (500ms)</p>
+              <p>✅ {enableBloom ? 'Bloom effect active' : 'Bloom disabled'}</p>
+              
+              <div style={{ marginTop: '10px' }}>
+                <button 
+                  onClick={() => setEnableBloom(!enableBloom)}
+                  style={{ width: '100%' }}
+                >
+                  {enableBloom ? '✨ Disable Bloom' : '💡 Enable Bloom'}
+                </button>
+              </div>
+              
               <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
                 <strong>Node Types:</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
@@ -226,6 +238,19 @@ function App() {
           <p>✅ Stagger delay: 100ms between nodes</p>
           <p>✅ Newest node marked as pulsing</p>
           <p>✅ Hover animation: smooth scale to 1.3x</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 6.0 Complete - Bloom Post-Processing</div>
+        <div className="panel-content">
+          <p>✅ EffectComposer integrated</p>
+          <p>✅ Bloom effect: intensity 1.5</p>
+          <p>✅ Luminance threshold: 0.1</p>
+          <p>✅ Luminance smoothing: 0.9</p>
+          <p>✅ Bloom radius: 0.4</p>
+          <p>✅ Affects emissive materials (nodes)</p>
+          <p>✅ Toggleable for performance</p>
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
