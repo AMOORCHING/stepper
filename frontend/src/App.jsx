@@ -1,17 +1,94 @@
 import { useState } from 'react'
 import ThinkingScene from './components/ThinkingScene'
+import ThoughtNode3D from './components/ThoughtNode3D'
+import ThoughtEdge3D from './components/ThoughtEdge3D'
 
-// Test sphere to verify the scene is working
-function TestSphere() {
+// Test data: multiple nodes with different types
+const testNodes = [
+  {
+    id: 'node1',
+    type: 'Analysis',
+    confidence: 0.8,
+    position: { x: 0, y: 5, z: 0 },
+    content: 'Initial analysis of the problem'
+  },
+  {
+    id: 'node2',
+    type: 'Decision',
+    confidence: 0.9,
+    position: { x: -3, y: 0, z: 2 },
+    content: 'Decision point: choose approach A'
+  },
+  {
+    id: 'node3',
+    type: 'Alternative',
+    confidence: 0.6,
+    position: { x: 3, y: 0, z: 2 },
+    content: 'Alternative approach B'
+  },
+  {
+    id: 'node4',
+    type: 'Verification',
+    confidence: 1.0,
+    position: { x: 0, y: -5, z: 0 },
+    content: 'Verify solution correctness'
+  },
+  {
+    id: 'node5',
+    type: 'Implementation',
+    confidence: 0.7,
+    position: { x: 0, y: -10, z: -2 },
+    content: 'Implement final solution'
+  }
+]
+
+// Test edges: connections between nodes
+const testEdges = [
+  { from: 'node1', to: 'node2', relationshipType: 'logical', strength: 0.8 },
+  { from: 'node1', to: 'node3', relationshipType: 'alternative', strength: 0.5 },
+  { from: 'node2', to: 'node4', relationshipType: 'temporal', strength: 0.7 },
+  { from: 'node3', to: 'node4', relationshipType: 'temporal', strength: 0.6 },
+  { from: 'node4', to: 'node5', relationshipType: 'logical', strength: 0.9 }
+]
+
+function TestNodes() {
+  const [selectedNode, setSelectedNode] = useState(null)
+  
+  const handleNodeClick = (node) => {
+    setSelectedNode(node)
+    console.log('Node clicked:', node)
+  }
+  
+  const handleNodeHover = (node, isHovering) => {
+    console.log('Node hover:', node.id, isHovering)
+  }
+  
   return (
-    <mesh position={[0, 0, 0]}>
-      <sphereGeometry args={[1, 32, 32]} />
-      <meshPhongMaterial 
-        color="#4ECDC4" 
-        emissive="#4ECDC4"
-        emissiveIntensity={0.5}
-      />
-    </mesh>
+    <>
+      {/* Render edges first (so they appear behind nodes) */}
+      {testEdges.map((edge, index) => {
+        const fromNode = testNodes.find(n => n.id === edge.from)
+        const toNode = testNodes.find(n => n.id === edge.to)
+        return (
+          <ThoughtEdge3D
+            key={`edge-${index}`}
+            edge={edge}
+            fromNode={fromNode}
+            toNode={toNode}
+          />
+        )
+      })}
+      
+      {/* Render nodes */}
+      {testNodes.map(node => (
+        <ThoughtNode3D
+          key={node.id}
+          node={node}
+          onClick={handleNodeClick}
+          onHover={handleNodeHover}
+        />
+      ))}
+    </>
   )
 }
 
@@ -22,7 +99,7 @@ function App() {
     return (
       <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
         <ThinkingScene>
-          <TestSphere />
+          <TestNodes />
         </ThinkingScene>
         
         {/* Info overlay */}
@@ -31,18 +108,29 @@ function App() {
           top: '20px',
           left: '20px',
           zIndex: 10,
-          maxWidth: '300px'
+          maxWidth: '350px'
         }}>
           <div className="panel">
-            <div className="panel-title">ThinkingScene Active</div>
+            <div className="panel-title">Node & Edge Rendering Test</div>
             <div className="panel-content">
-              <p>✅ Camera at [0, 10, 30]</p>
-              <p>✅ 3 Point Lights active</p>
-              <p>✅ Ambient light (#1a1a2e)</p>
-              <p>✅ OrbitControls enabled</p>
+              <p>✅ 5 nodes with different types</p>
+              <p>✅ 5 edges with varied styles</p>
+              <p>✅ Emissive materials active</p>
+              <p>✅ Confidence-based scaling</p>
+              <p>✅ Click/hover interactions</p>
+              <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
+                <strong>Node Types:</strong>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                  <span className="badge badge-analysis" style={{ fontSize: '0.7rem' }}>Analysis</span>
+                  <span className="badge badge-decision" style={{ fontSize: '0.7rem' }}>Decision</span>
+                  <span className="badge badge-verification" style={{ fontSize: '0.7rem' }}>Verify</span>
+                  <span className="badge badge-alternative" style={{ fontSize: '0.7rem' }}>Alt</span>
+                  <span className="badge badge-implementation" style={{ fontSize: '0.7rem' }}>Impl</span>
+                </div>
+              </div>
               <button 
                 onClick={() => setShowScene(false)}
-                style={{ marginTop: '10px', width: '100%' }}
+                style={{ marginTop: '12px', width: '100%' }}
               >
                 ← Back to Test Page
               </button>
@@ -83,11 +171,24 @@ function App() {
           <p>✅ Ambient light (#1a1a2e, intensity 0.3)</p>
           <p>✅ 3 Point lights positioned</p>
           <p>✅ OrbitControls with damping enabled</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 3.0 Complete - Node & Edge Rendering</div>
+        <div className="panel-content">
+          <p>✅ nodeColors.js with all ThoughtType colors</p>
+          <p>✅ ThoughtNode3D with SphereGeometry</p>
+          <p>✅ Emissive materials with type-based colors</p>
+          <p>✅ Confidence-based scaling (0.7-1.3 range)</p>
+          <p>✅ ThoughtEdge3D with Line rendering</p>
+          <p>✅ Edge coloring by relationship type</p>
+          <p>✅ Strength-based line width (1-3px)</p>
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
           >
-            🚀 Launch ThinkingScene →
+            🚀 Launch 3D Visualization →
           </button>
         </div>
       </div>
