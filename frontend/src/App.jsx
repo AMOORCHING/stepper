@@ -141,6 +141,10 @@ function App() {
     setSubmitError(null)
 
     try {
+      // Clear previous analysis data
+      resetStore()
+      setSelectedNode(null)
+      
       const response = await fetch('http://localhost:8000/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -260,7 +264,12 @@ function App() {
 
             <section className="mt-8">
               <button 
-                onClick={() => setShowScene(false)}
+                onClick={() => {
+                  setShowScene(false)
+                  resetStore()
+                  setSelectedNode(null)
+                  setSessionId('')
+                }}
                 className="w-full px-4 py-2 bg-bg-secondary text-text-primary border border-border-default rounded-md text-sm font-medium hover:border-border-strong hover:bg-bg-tertiary transition-all"
               >
                 ← Back to Home
@@ -329,16 +338,16 @@ function App() {
   // ===== HOME PAGE =====
   return (
     <main className="flex min-h-screen relative mx-4 md:mx-8 lg:mx-36 border-l border-r border-gray-200 bg-transparent">
-      <div className="absolute top-8 left-8">
-        <header className="text-sm text-gray-800 font-medium">
+      <div className="absolute top-4 left-4 md:top-8 md:left-8 right-4 md:right-auto">
+        <header className="text-xs md:text-sm text-gray-800 font-medium">
           Let's Think Step by Step
         </header>
-        <header className="text-sm text-gray-500 tracking-normal">
+        <header className="text-xs md:text-sm text-gray-500 tracking-normal">
           By <a href="https://moorching.com" className="underline underline-offset-2" target="_self">Akash Moorching</a>
         </header>
       </div>
 
-      <div className="flex items-center justify-center w-full px-8">
+      <div className="flex items-center justify-center w-full px-4 md:px-8 pt-20 md:pt-0">
         <div className="max-w-2xl w-full text-left">
           <p className="text-gray-800 text-sm leading-relaxed mb-8">
             Inspired by <a
@@ -410,10 +419,10 @@ function App() {
         </div>
       </div>
 
-      <nav className="absolute bottom-8 right-8 flex flex-col gap-4 items-end">
+      <nav className="absolute bottom-4 right-4 md:bottom-8 md:right-8 flex flex-col gap-3 md:gap-4 items-end">
         <a
           href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
-          className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
+          className="text-gray-600 hover:text-gray-800 text-xs md:text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -422,7 +431,7 @@ function App() {
         </a>
         <a
           href="https://github.com/AMOORCHING/stepper"
-          className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
+          className="text-gray-600 hover:text-gray-800 text-xs md:text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
           target="_blank"
           rel="noopener noreferrer"
         >
