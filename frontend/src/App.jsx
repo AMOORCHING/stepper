@@ -7,6 +7,8 @@ import { updateNodePositions } from './utils/layoutAlgorithm'
 import { useThinkingStore } from './store/thinkingStore'
 import { useWebSocket } from './hooks/useWebSocket'
 import ProblemSubmitForm from './components/ProblemSubmitForm'
+import Header from './components/layout/Header'
+import Sidebar from './components/layout/Sidebar'
 
 // Test data: multiple nodes with different types (without manual positions)
 const testNodesRaw = [
@@ -223,7 +225,38 @@ function App() {
 
   if (showScene) {
     return (
-      <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      <div className="flex flex-col h-screen">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar>
+            {/* Sidebar content - metrics, controls, etc */}
+            <section>
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+                Session Info
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-text-secondary">Nodes</span>
+                  <span className="text-sm font-semibold text-text-primary">{nodesToUse.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-text-secondary">Status</span>
+                  <span className="text-sm font-semibold text-text-primary">
+                    {isThinking ? 'Thinking...' : isComplete ? 'Complete' : 'Ready'}
+                  </span>
+                </div>
+                {useWebSocketMode && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-text-secondary">Connection</span>
+                    <span className={`text-sm font-semibold ${isConnected ? 'text-accent-success' : 'text-accent-error'}`}>
+                      {isConnected ? 'Connected' : 'Disconnected'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </Sidebar>
+          <div style={{ position: 'relative', flex: 1 }}>
         {/* Loading Spinner */}
         {isLoading && (
           <div style={{
@@ -348,6 +381,8 @@ function App() {
             }
           `}
         </style>
+          </div>
+        </div>
       </div>
     )
   }

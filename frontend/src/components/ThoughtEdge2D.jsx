@@ -30,9 +30,9 @@ export default function ThoughtEdge2D({ edge, fromNode, toNode, appearDelay = 0 
   // Get style based on relationship type
   const style = getEdgeStyle(edge.relationshipType || 'logical')
   
-  // Calculate line width based on connection strength (1-3 pixels)
+  // Calculate line width based on connection strength - following PRD0 (1.5px default)
   const strength = edge.strength !== undefined ? edge.strength : 0.5
-  const lineWidth = 1 + (strength * 2) // Range: 1-3
+  const lineWidth = 1.5 + (strength * 1) // Range: 1.5-2.5px
 
   return (
     <line

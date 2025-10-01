@@ -35,9 +35,10 @@ export default function ThoughtNode2D({
   // Get color based on node type
   const color = getNodeColor(node.type)
   
-  // Node dimensions
+  // Node dimensions - following PRD0 specifications
   const width = 140
   const height = 60
+  const radius = 24 // Node visual radius for consistent sizing
   
   // Appearance animation on mount - only run once per node
   useEffect(() => {
@@ -114,26 +115,40 @@ export default function ThoughtNode2D({
         onMouseLeave={handleMouseLeave}
         style={{ cursor: 'pointer' }}
       >
-      {/* Main rectangle - sharp corners, no gradients */}
+      {/* Main rectangle - research-grade styling with rounded corners */}
       <rect
         x={-width / 2}
         y={-height / 2}
         width={width}
         height={height}
+        rx={8}
+        ry={8}
         fill="var(--bg-secondary)"
         stroke={color}
         strokeWidth={isHovered ? 3 : 2}
         opacity={0.7 + (node.confidence * 0.3)}
+        filter={isHovered ? "drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.07))" : "drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.05))"}
       />
       
-      {/* Type label bar at top */}
+      {/* Type label bar at top - rounded top corners */}
       <rect
         x={-width / 2}
         y={-height / 2}
         width={width}
         height={18}
+        rx={8}
+        ry={8}
         fill={color}
-        opacity={0.8}
+        opacity={0.9}
+      />
+      {/* Cover bottom corners of type label */}
+      <rect
+        x={-width / 2}
+        y={-height / 2 + 10}
+        width={width}
+        height={8}
+        fill={color}
+        opacity={0.9}
       />
       
       {/* Type text */}
@@ -141,10 +156,11 @@ export default function ThoughtNode2D({
         x={0}
         y={-height / 2 + 13}
         textAnchor="middle"
-        fill="#000"
+        fill="white"
         fontSize="10"
-        fontWeight="bold"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}
+        fontWeight="600"
+        letterSpacing="0.025em"
+        style={{ userSelect: 'none', pointerEvents: 'none', fontFamily: 'Inter, sans-serif' }}
       >
         {node.type.toUpperCase()}
       </text>
@@ -156,7 +172,7 @@ export default function ThoughtNode2D({
         textAnchor="middle"
         fill="var(--text-primary)"
         fontSize="11"
-        style={{ userSelect: 'none', pointerEvents: 'none' }}
+        style={{ userSelect: 'none', pointerEvents: 'none', fontFamily: 'Inter, sans-serif' }}
       >
         {displayContent}
       </text>

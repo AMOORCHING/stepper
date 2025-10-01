@@ -1,34 +1,35 @@
 /**
  * Color constants for different ThoughtNode types
+ * Research-grade palette following PRD0 design system
  * 
- * Each thought type has a distinct color for visual identification
- * in the 3D visualization. Colors are used for both node materials
- * and UI badges.
+ * Each thought type has a distinct color for visual identification.
+ * Colors meet WCAG AA contrast requirements.
  */
 
 export const NODE_COLORS = {
-  Analysis: '#4ECDC4',      // Cyan - analytical thinking
-  Decision: '#FF6B6B',      // Red - decision points
-  Verification: '#95E1D3',  // Light teal - verification steps
-  Alternative: '#FFE66D',   // Yellow - alternative approaches
-  Implementation: '#A8E6CF' // Light green - implementation details
+  Analysis: '#2563EB',      // Blue - analytical thinking
+  Decision: '#DC2626',      // Red - decision points
+  Verification: '#059669',  // Green - verification steps
+  Alternative: '#D97706',   // Orange - alternative approaches
+  Implementation: '#7C3AED' // Purple - implementation details
 }
 
 /**
  * Edge/connection colors based on relationship type
+ * Subtle grays for research-grade aesthetic
  */
 export const EDGE_COLORS = {
   logical: {
-    color: '#FFFFFF',       // White for logical dependencies
+    color: '#D4D4D4',       // Subtle gray for logical dependencies
     opacity: 0.6
   },
   temporal: {
-    color: '#4A90E2',       // Blue for temporal relationships
-    opacity: 0.4
+    color: '#A3A3A3',       // Medium gray for temporal relationships
+    opacity: 0.5
   },
   alternative: {
-    color: '#FFE66D',       // Yellow for alternative paths
-    opacity: 0.3
+    color: '#D97706',       // Orange for alternative paths
+    opacity: 0.4
   }
 }
 
