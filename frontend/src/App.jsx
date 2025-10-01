@@ -276,8 +276,8 @@ function App() {
             <div style={{
               width: '60px',
               height: '60px',
-              border: '4px solid rgba(78, 205, 196, 0.2)',
-              borderTop: '4px solid #4ECDC4',
+              border: '4px solid rgba(37, 99, 235, 0.2)',
+              borderTop: '4px solid var(--accent-primary)',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />
@@ -360,7 +360,7 @@ function App() {
                 onClick={() => setShowScene(false)}
                 style={{ marginTop: '12px', width: '100%' }}
               >
-                ← Back to Test Page
+                ← Back to Home
               </button>
             </div>
           </div>
@@ -388,160 +388,161 @@ function App() {
   }
 
   return (
-    <div style={{ 
-      padding: '40px', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '20px',
-      minHeight: '100vh'
-    }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
-        🧠 Stepper - Thinking Visualization
-      </h1>
+    <div className="flex flex-col min-h-screen">
+      <Header />
       
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 1.0 Complete - Frontend Setup</div>
-        <div className="panel-content">
-          <p>✅ Vite + React 18 running successfully</p>
-          <p>✅ Dark theme (#0a0a0f) applied</p>
-          <p>✅ Global styles loaded</p>
-          <p>✅ All dependencies installed</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 2.0 Complete - 2D Scene Foundation</div>
-        <div className="panel-content">
-          <p>✅ ThinkingScene2D component created</p>
-          <p>✅ SVG-based rendering</p>
-          <p>✅ Pan and zoom controls</p>
-          <p>✅ Minimal, clean aesthetic</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 3.0 Complete - Node & Edge Rendering</div>
-        <div className="panel-content">
-          <p>✅ nodeColors.js with all ThoughtType colors</p>
-          <p>✅ ThoughtNode2D with sharp rectangular design</p>
-          <p>✅ Solid colors, no gradients or bloom</p>
-          <p>✅ Confidence-based opacity</p>
-          <p>✅ ThoughtEdge2D with simple line rendering</p>
-          <p>✅ Edge coloring by relationship type</p>
-          <p>✅ Strength-based line width (1-3px)</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 4.0 Complete - Layout Algorithm</div>
-        <div className="panel-content">
-          <p>✅ calculateHierarchicalLayout function</p>
-          <p>✅ Depth calculation via graph traversal</p>
-          <p>✅ Breadth indexing for siblings</p>
-          <p>✅ Y position: depth × 120 pixels</p>
-          <p>✅ X position: centered with 180px spacing</p>
-          <p>✅ updateNodePositions helper function</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 5.0 Complete - Animation System</div>
-        <div className="panel-content">
-          <p>✅ animations2d.js with anime.js helpers</p>
-          <p>✅ Node appearance: simple fade-in (400ms)</p>
-          <p>✅ Node pulse: subtle scale animation</p>
-          <p>✅ Edge drawing: fade-in effect (300ms)</p>
-          <p>✅ Stagger delay: 100ms between nodes</p>
-          <p>✅ Newest node marked as pulsing</p>
-          <p>✅ Hover animation: smooth scale to 1.05x</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 6.0 Complete - View Controls</div>
-        <div className="panel-content">
-          <p>✅ Pan controls with mouse drag</p>
-          <p>✅ Zoom controls with mouse wheel</p>
-          <p>✅ Zoom buttons (+/-/reset)</p>
-          <p>✅ Focus on node with double-click</p>
-          <p>✅ Clean, minimal interface</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 8.0 Complete - WebSocket Integration</div>
-        <div className="panel-content">
-          <p>✅ useWebSocket hook created</p>
-          <p>✅ Event handlers: new_thought, thinking_complete, solution_ready, error</p>
-          <p>✅ Zustand store for state management</p>
-          <p>✅ Auto-layout calculation on new nodes</p>
-          <p>✅ Edge building from dependencies</p>
-          <p>✅ Reactive rendering from store</p>
-          <p>✅ Auto-reconnect with max attempts</p>
-
-          <ProblemSubmitForm
-            onSessionCreated={(sessionId) => {
-              console.log('Session created:', sessionId)
-              setSessionId(sessionId)
-              setUseWebSocketMode(true)
-              // Small delay to ensure state is set
-              setTimeout(() => {
-                setShowScene(true)
-              }, 100)
-            }}
-          />
+      {/* Hero Section with Grid Background */}
+      <div className="relative flex-1 overflow-hidden">
+        {/* Grid Pattern Background */}
+        <div className="absolute inset-0 bg-bg-primary" style={{
+          backgroundImage: `
+            linear-gradient(to right, #E5E5E5 1px, transparent 1px),
+            linear-gradient(to bottom, #E5E5E5 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px',
+          opacity: 0.4
+        }} />
+        
+        {/* Subtle Dot Pattern Overlay */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle, #D4D4D4 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          opacity: 0.15
+        }} />
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center px-8 py-20 max-w-6xl mx-auto">
           
-          <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(78, 205, 196, 0.1)', borderRadius: '4px', border: '1px solid rgba(78, 205, 196, 0.3)' }}>
-            <strong style={{ display: 'block', marginBottom: '8px' }}>WebSocket Mode:</strong>
-            <input
-              type="text"
-              placeholder="Enter session ID"
-              value={sessionId}
-              onChange={(e) => setSessionId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                marginBottom: '8px',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '4px',
-                color: 'var(--text-primary)'
-              }}
-            />
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={useWebSocketMode}
-                onChange={(e) => setUseWebSocketMode(e.target.checked)}
-              />
-              <span>Enable WebSocket Mode</span>
-            </label>
+          {/* Hero Text */}
+          <div className="text-center mb-16 max-w-4xl">
+            <h1 className="text-5xl font-semibold text-text-primary mb-6 tracking-tight leading-tight">
+              Visualize AI Reasoning
+            </h1>
+            <p className="text-xl text-text-secondary leading-relaxed mb-8">
+              Watch Claude's extended thinking unfold in real-time. See every thought node, decision point, and reasoning path visualized as an interactive graph.
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setUseWebSocketMode(false)
+                  setShowScene(true)
+                }}
+                className="px-8 py-4 bg-accent-primary text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-all duration-fast shadow-md hover:shadow-lg"
+              >
+                Try Demo
+              </button>
+              <button
+                onClick={() => {
+                  const formElement = document.getElementById('problem-form')
+                  formElement?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="px-8 py-4 bg-bg-secondary text-text-primary font-semibold rounded-md border border-border-default hover:border-border-strong hover:bg-bg-tertiary transition-all duration-fast"
+              >
+                Submit Problem →
+              </button>
+            </div>
           </div>
           
-          <button 
-            onClick={() => setShowScene(true)}
-            style={{ marginTop: '10px', width: '100%' }}
-          >
-            🚀 Launch Visualization →
-          </button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <span className="badge badge-analysis">Analysis</span>
-        <span className="badge badge-decision">Decision</span>
-        <span className="badge badge-verification">Verification</span>
-        <span className="badge badge-alternative">Alternative</span>
-        <span className="badge badge-implementation">Implementation</span>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">Installed Dependencies</div>
-        <div className="panel-content">
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li>📦 animejs@^3.2.2</li>
-            <li>📦 zustand@^4.5.7</li>
-          </ul>
+          {/* Visualization Preview/Demo Stats */}
+          <div className="grid grid-cols-3 gap-8 mb-20 max-w-2xl w-full">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-accent-primary mb-2">5</div>
+              <div className="text-sm text-text-secondary uppercase tracking-wide">Node Types</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-accent-primary mb-2">Real-time</div>
+              <div className="text-sm text-text-secondary uppercase tracking-wide">Updates</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-accent-primary mb-2">2D</div>
+              <div className="text-sm text-text-secondary uppercase tracking-wide">Graph View</div>
+            </div>
+          </div>
+          
+          {/* Node Types Legend */}
+          <div className="mb-20 max-w-3xl w-full">
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-6 text-center">
+              Thought Node Types
+            </h3>
+            <div className="grid grid-cols-5 gap-4">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-md bg-node-analysis flex items-center justify-center text-white font-semibold text-xs">
+                  A
+                </div>
+                <span className="text-xs text-text-secondary text-center">Analysis</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-md bg-node-decision flex items-center justify-center text-white font-semibold text-xs">
+                  D
+                </div>
+                <span className="text-xs text-text-secondary text-center">Decision</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-md bg-node-verification flex items-center justify-center text-white font-semibold text-xs">
+                  V
+                </div>
+                <span className="text-xs text-text-secondary text-center">Verification</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-md bg-node-alternative flex items-center justify-center text-white font-semibold text-xs">
+                  A
+                </div>
+                <span className="text-xs text-text-secondary text-center">Alternative</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-md bg-node-implementation flex items-center justify-center text-white font-semibold text-xs">
+                  I
+                </div>
+                <span className="text-xs text-text-secondary text-center">Implementation</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Submit Form Section */}
+          <div id="problem-form" className="w-full max-w-4xl">
+            <ProblemSubmitForm
+              onSessionCreated={(sessionId) => {
+                console.log('Session created:', sessionId)
+                setSessionId(sessionId)
+                setUseWebSocketMode(true)
+                setTimeout(() => {
+                  setShowScene(true)
+                }, 100)
+              }}
+            />
+          </div>
+          
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-8 mt-20 max-w-5xl w-full">
+            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-3">
+                Interactive Exploration
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Pan, zoom, and click nodes to explore the reasoning graph. Each node reveals detailed information about that step in the thinking process.
+              </p>
+            </div>
+            
+            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-3">
+                Hierarchical Layout
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Automatic graph layout algorithm positions nodes based on their relationships and depth, making complex reasoning paths easy to follow.
+              </p>
+            </div>
+            
+            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-3">
+                Real-time Streaming
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Watch thoughts appear as they're generated. WebSocket integration provides live updates as Claude processes your problem.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -22,7 +22,7 @@ export default function ProblemSubmitForm({ onSessionCreated }) {
 
     try {
       // Call the analyze endpoint
-      const response = await fetch('http://localhost:8001/api/analyze', {
+      const response = await fetch('http://localhost:8000/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

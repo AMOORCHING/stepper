@@ -44,7 +44,7 @@ export function useWebSocket({
     const connect = () => {
       try {
         // Get WebSocket URL from env or default to localhost
-        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8001'
+        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
         const url = `${wsUrl}/ws/${sessionId}`
         
         console.log(`Connecting to WebSocket: ${url}`)
