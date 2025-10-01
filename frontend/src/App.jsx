@@ -355,7 +355,7 @@ function App() {
               className="underline underline-offset-2"
               target="_blank"
               rel="noopener noreferrer"
-            >Anthropic's circuit tracing research</a> on how language models think, <span className="font-bold text-gray-900">Stepper</span> renders Claude 4.5's internal reasoning chain as an interactive force-directed graph. Watch as thought nodes emerge in real-time: analytical steps, decision points, verification checks, and alternative approaches Claude considers and discards.
+            >Anthropic's circuit tracing research</a> on how language models think, <span className="font-semibold text-gray-800">Stepper</span> renders Claude 4.5's internal reasoning chain as an interactive force-directed graph. Watch as thought nodes emerge in real-time: analytical steps, decision points, verification checks, and alternative approaches Claude considers and discards.
             <br /><br />
             Submit a reasoning problem, word puzzle, math challenge, or logical question below. Each node represents a distinct reasoning step—hover to read the full thought, click to explore dependencies, and trace the logical pathway from problem to solution.
           </p>
