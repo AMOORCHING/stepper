@@ -165,24 +165,42 @@ export default function ThinkingScene({
   enableBloom = true,
   enableAutoRotation = true,
   autoFocusNode = null,
-  onCameraReady
+  onCameraReady,
+  onToggleAutoRotation,
+  onToggleFullscreen
 }) {
   const [cameraControls, setCameraControls] = useState(null)
   
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
-      if (!cameraControls) return
+      // Don't trigger if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return
+      }
       
       // R key - Reset camera
-      if (e.key === 'r' || e.key === 'R') {
+      if ((e.key === 'r' || e.key === 'R') && cameraControls) {
+        e.preventDefault()
         cameraControls.resetCamera()
+      }
+      
+      // Space key - Pause/resume auto-rotation
+      if (e.key === ' ' && onToggleAutoRotation) {
+        e.preventDefault()
+        onToggleAutoRotation()
+      }
+      
+      // F key - Toggle fullscreen
+      if ((e.key === 'f' || e.key === 'F') && onToggleFullscreen) {
+        e.preventDefault()
+        onToggleFullscreen()
       }
     }
     
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [cameraControls])
+  }, [cameraControls, onToggleAutoRotation, onToggleFullscreen])
   
   return (
     <div style={{ 

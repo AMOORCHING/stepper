@@ -13,14 +13,16 @@ import { animateNodeAppearance, animateNodePulse, stopNodePulse, animateNodeHove
  *   - position: {x, y, z} coordinates
  *   - content: text content
  * @param {function} onClick - Click handler
+ * @param {function} onDoubleClick - Double-click handler
  * @param {function} onHover - Hover handler
  * @param {number} appearDelay - Delay before appearance animation (ms)
  * @param {boolean} isPulsing - Whether this node should pulse (for active/newest node)
  */
-export default function ThoughtNode3D({ node, onClick, onHover, appearDelay = 0, isPulsing = false }) {
+export default function ThoughtNode3D({ node, onClick, onDoubleClick, onHover, appearDelay = 0, isPulsing = false }) {
   const meshRef = useRef()
   const [pulseAnimation, setPulseAnimation] = useState(null)
   const [isHovered, setIsHovered] = useState(false)
+  const lastClickTime = useRef(0)
   
   // Get color based on node type
   const color = getNodeColor(node.type)
@@ -55,7 +57,20 @@ export default function ThoughtNode3D({ node, onClick, onHover, appearDelay = 0,
   
   const handleClick = (e) => {
     e.stopPropagation()
-    if (onClick) onClick(node)
+    
+    const currentTime = Date.now()
+    const timeSinceLastClick = currentTime - lastClickTime.current
+    
+    // Detect double-click (within 300ms)
+    if (timeSinceLastClick < 300) {
+      // Double-click
+      if (onDoubleClick) onDoubleClick(node)
+      lastClickTime.current = 0
+    } else {
+      // Single click
+      if (onClick) onClick(node)
+      lastClickTime.current = currentTime
+    }
   }
   
   const handlePointerOver = (e) => {

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
+import NodeDetailPanel from './components/NodeDetailPanel'
 import { updateNodePositions } from './utils/layoutAlgorithm'
 import { useThinkingStore } from './store/thinkingStore'
 import { useWebSocket } from './hooks/useWebSocket'
@@ -52,16 +53,17 @@ const testEdges = [
 // Calculate positions using the layout algorithm
 const testNodes = updateNodePositions(testNodesRaw, testEdges)
 
-function TestNodes({ nodes = testNodes, edges = testEdges }) {
-  const [selectedNode, setSelectedNode] = useState(null)
-  
+function TestNodes({ nodes = testNodes, edges = testEdges, onNodeClick, onNodeDoubleClick, onNodeHover }) {
   const handleNodeClick = (node) => {
-    setSelectedNode(node)
-    console.log('Node clicked:', node)
+    if (onNodeClick) onNodeClick(node)
+  }
+  
+  const handleNodeDoubleClick = (node) => {
+    if (onNodeDoubleClick) onNodeDoubleClick(node)
   }
   
   const handleNodeHover = (node, isHovering) => {
-    console.log('Node hover:', node.id, isHovering)
+    if (onNodeHover) onNodeHover(node, isHovering)
   }
   
   // Stagger delay: 100ms between each node
@@ -103,6 +105,7 @@ function TestNodes({ nodes = testNodes, edges = testEdges }) {
           key={node.id}
           node={node}
           onClick={handleNodeClick}
+          onDoubleClick={handleNodeDoubleClick}
           onHover={handleNodeHover}
           appearDelay={index * STAGGER_DELAY}
           isPulsing={node.id === newestNodeId}
@@ -119,6 +122,9 @@ function App() {
   const [nodeCount, setNodeCount] = useState(0)
   const [useWebSocketMode, setUseWebSocketMode] = useState(false)
   const [sessionId, setSessionId] = useState('')
+  const [selectedNode, setSelectedNode] = useState(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const cameraControlsRef = useRef(null)
   
   // Zustand store
   const {
@@ -182,6 +188,62 @@ function App() {
       resetStore()
     }
   }, [useWebSocketMode, resetStore])
+  
+  // Handle node click - open detail panel
+  const handleNodeClick = (node) => {
+    if (node) {
+      console.log('Node clicked:', node)
+      setSelectedNode(node)
+    }
+  }
+  
+  // Handle node double-click - focus camera
+  const handleNodeDoubleClick = (node) => {
+    if (node && cameraControlsRef.current?.focusOnNode) {
+      console.log('Node double-clicked, focusing camera:', node.id)
+      cameraControlsRef.current.focusOnNode(node.position, 1500, 15)
+    }
+  }
+  
+  // Handle node hover
+  const handleNodeHover = (node, isHovering) => {
+    // console.log('Node hover:', node.id, isHovering)
+  }
+  
+  // Toggle auto-rotation
+  const handleToggleAutoRotation = () => {
+    setEnableAutoRotation(prev => !prev)
+  }
+  
+  // Toggle fullscreen
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error('Error attempting to enable fullscreen:', err)
+      })
+      setIsFullscreen(true)
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    }
+  }
+  
+  // Track fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+  
+  // Camera ready handler
+  const handleCameraReady = (controls) => {
+    cameraControlsRef.current = controls
+  }
 
   if (showScene) {
     return (
@@ -190,9 +252,27 @@ function App() {
           enableBloom={enableBloom}
           enableAutoRotation={enableAutoRotation}
           autoFocusNode={autoFocusNode}
+          onCameraReady={handleCameraReady}
+          onToggleAutoRotation={handleToggleAutoRotation}
+          onToggleFullscreen={handleToggleFullscreen}
         >
-          <TestNodes nodes={nodesToUse} edges={useWebSocketMode ? storeEdges : testEdges} />
+          <TestNodes 
+            nodes={nodesToUse} 
+            edges={useWebSocketMode ? storeEdges : testEdges}
+            onNodeClick={handleNodeClick}
+            onNodeDoubleClick={handleNodeDoubleClick}
+            onNodeHover={handleNodeHover}
+          />
         </ThinkingScene>
+        
+        {/* Node Detail Panel */}
+        {selectedNode && (
+          <NodeDetailPanel
+            node={selectedNode}
+            onClose={() => setSelectedNode(null)}
+            position="right"
+          />
+        )}
         
         {/* Info overlay */}
         <div style={{
@@ -230,8 +310,12 @@ function App() {
               <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
                 <strong>Keyboard Shortcuts:</strong>
                 <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>R</code> - Reset camera</p>
+                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>Space</code> - Toggle rotation</p>
+                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>F</code> - Fullscreen</p>
                 <p style={{ margin: '4px 0' }}>🖱️ Drag - Rotate view</p>
                 <p style={{ margin: '4px 0' }}>🔍 Scroll - Zoom in/out</p>
+                <p style={{ margin: '4px 0' }}>🖱️ Click node - Show details</p>
+                <p style={{ margin: '4px 0' }}>🖱️ Double-click - Focus camera</p>
               </div>
               
               <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
