@@ -1,42 +1,35 @@
 /**
- * Header Component
+ * Header Component - Exa.ai inspired
  * 
- * Application header with logo, tagline, and navigation
- * Height: 64px, white background with subtle bottom border
+ * Clean, minimal header with logo and navigation
  */
 export default function Header() {
   return (
-    <header className="h-16 bg-bg-secondary border-b border-border-subtle flex items-center px-8">
-      <div className="flex-1 flex items-center gap-3">
-        {/* Logo/Title */}
-        <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
-          ThinkSpace
-        </h1>
-        {/* Tagline */}
-        <span className="text-sm text-text-secondary hidden md:block">
-          Visualizing Claude's Extended Thinking
-        </span>
+    <header className="h-20 bg-[#f5f5f5] border-b border-white/10 flex items-center px-8">
+      <div className="flex-1 flex items-center gap-2">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-black">
+            Stepper
+          </h1>
+        </div>
       </div>
       
       {/* Navigation */}
-      <nav className="flex items-center gap-6">
+      <nav className="flex items-center gap-8">
         <a 
-          href="#examples" 
-          className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors duration-fast"
-        >
-          Examples
-        </a>
-        <a 
-          href="#about" 
-          className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors duration-fast"
-        >
-          About
-        </a>
-        <a 
-          href="https://github.com" 
+          href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors duration-fast"
+          className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
+        >
+          Research
+        </a>
+        <a 
+          href="https://github.com/amoorching/stepper" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm font-medium text-gray-600 hover:text-black transition-colors"
         >
           GitHub
         </a>

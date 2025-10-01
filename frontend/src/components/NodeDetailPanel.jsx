@@ -37,11 +37,17 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
   return (
     <>
       {/* Detail Panel */}
-      <div className={`
-        fixed top-5 z-50 w-[350px] max-h-[calc(100vh-40px)] overflow-y-auto
-        animate-[slideIn_0.3s_ease-out]
-        ${position === 'right' ? 'right-5' : 'left-5'}
-      `}>
+      <div 
+        className={`
+          fixed top-5 z-50 w-[350px] max-h-[calc(100vh-40px)] overflow-y-auto
+          ${position === 'right' ? 'right-5 animate-[slideInRight_0.3s_ease-out]' : 'left-5 animate-[slideInLeft_0.3s_ease-out]'}
+        `}
+        style={{
+          animation: position === 'right' 
+            ? 'slideInRight 0.3s ease-out' 
+            : 'slideInLeft 0.3s ease-out'
+        }}
+      >
         <Card className="shadow-lg">
           {/* Header */}
           <div className="flex justify-between items-center mb-4 pb-4 border-b border-border-subtle">
@@ -160,21 +166,6 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
           </div>
         </Card>
       </div>
-
-      <style>
-        {`
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateX(${position === 'right' ? '20px' : '-20px'});
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-        `}
-      </style>
     </>
   )
 }

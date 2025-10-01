@@ -62,73 +62,55 @@ export default function ProblemSubmitForm({ onSessionCreated }) {
   ]
 
   return (
-    <Card className="max-w-3xl" padding="lg">
-      <h2 className="text-2xl font-semibold text-text-primary mb-6">
-        🚀 Start New Analysis
-      </h2>
-      
+    <div className="max-w-4xl mx-auto">
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block mb-2 text-sm font-medium text-text-primary">
-            Enter your problem or question:
-          </label>
           <textarea
             value={problem}
             onChange={(e) => setProblem(e.target.value)}
             placeholder="e.g., How would you design a URL shortener? Think through the architecture and tradeoffs..."
             rows={6}
-            className="w-full px-3 py-3 bg-bg-primary border border-border-default rounded-md text-text-primary text-sm resize-vertical font-sans focus:outline-none focus:border-accent-primary focus:ring-3 focus:ring-accent-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-5 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 text-base resize-vertical font-sans focus:outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             disabled={isSubmitting}
           />
-          <div className="text-xs text-text-secondary mt-1">
+          <div className="text-sm text-gray-500 mt-2">
             {problem.length}/5000 characters (minimum 10)
           </div>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 bg-accent-error/10 border border-accent-error/20 rounded-md text-accent-error text-sm">
-            ⚠️ {error}
+          <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
           </div>
         )}
 
-        <Button
+        <button
           type="submit"
-          variant="primary"
-          size="lg"
           disabled={isSubmitting || problem.trim().length < 10}
-          className="w-full text-base font-semibold"
+          className="w-full px-8 py-4 bg-black text-white text-base font-medium rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? '🔄 Starting Analysis...' : '✨ Analyze Problem'}
-        </Button>
+          {isSubmitting ? 'Starting Analysis...' : 'Analyze Problem'}
+        </button>
       </form>
 
-      <div className="mt-6">
-        <p className="text-sm text-text-secondary mb-3">
-          💡 Try these examples:
+      <div className="mt-8">
+        <p className="text-sm text-gray-600 mb-3 font-medium">
+          Try these examples:
         </p>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {exampleProblems.map((example, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setProblem(example)}
               disabled={isSubmitting}
-              className="p-3 text-left text-sm bg-bg-secondary border border-border-default rounded-md text-text-secondary hover:bg-bg-tertiary hover:border-border-strong transition-all duration-fast disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-4 text-left text-sm bg-white border border-gray-200 rounded-lg text-gray-700 hover:border-gray-300 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {example}
             </button>
           ))}
         </div>
       </div>
-
-      <div className="mt-6 p-4 bg-accent-primary/10 border border-accent-primary/20 rounded-md text-sm">
-        <strong className="font-semibold">📝 How it works:</strong>
-        <ol className="mt-2 ml-5 space-y-1 list-decimal">
-          <li>Enter your problem or question</li>
-          <li>Click "Analyze Problem"</li>
-          <li>Watch Claude's thinking unfold in real-time!</li>
-        </ol>
-      </div>
-    </Card>
+    </div>
   )
 }

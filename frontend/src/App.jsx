@@ -6,7 +6,6 @@ import NodeDetailPanel from './components/NodeDetailPanel'
 import { updateNodePositions } from './utils/layoutAlgorithm'
 import { useThinkingStore } from './store/thinkingStore'
 import { useWebSocket } from './hooks/useWebSocket'
-import ProblemSubmitForm from './components/ProblemSubmitForm'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 
@@ -127,6 +126,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const sceneControlsRef = useRef(null)
   
+  // Problem submission state
+  const [problem, setProblem] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  
   // Zustand store
   const {
     nodes: storeNodes,
@@ -222,6 +226,60 @@ function App() {
       return () => clearTimeout(timer)
     }
   }, [showScene])
+  
+  // Handle problem submission
+  const handleSubmitProblem = async (e) => {
+    e.preventDefault()
+    
+    if (!problem.trim() || problem.trim().length < 10) {
+      setSubmitError('Problem must be at least 10 characters')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const response = await fetch('http://localhost:8000/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ problem: problem.trim() })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Analysis started:', data)
+      
+      // Set session and switch to WebSocket mode
+      setSessionId(data.session_id)
+      setUseWebSocketMode(true)
+      setProblem('')
+      
+      // Show the scene
+      setTimeout(() => {
+        setShowScene(true)
+      }, 100)
+      
+    } catch (err) {
+      console.error('Failed to submit problem:', err)
+      setSubmitError(`Failed to start analysis: ${err.message}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+  
+  // Example problems
+  const exampleProblems = [
+    "Reverse a linked list",
+    "Design LRU cache",
+    "Longest palindromic substring",
+    "Implement merge sort",
+  ]
 
   if (showScene) {
     return (
@@ -256,32 +314,12 @@ function App() {
               </div>
             </section>
           </Sidebar>
-          <div style={{ position: 'relative', flex: 1 }}>
+          <div className="relative flex-1">
         {/* Loading Spinner */}
         {isLoading && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--bg-primary)',
-            zIndex: 10000,
-            animation: 'fadeOut 0.5s ease-out 1s forwards'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              border: '4px solid rgba(37, 99, 235, 0.2)',
-              borderTop: '4px solid var(--accent-primary)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>
+          <div className="fixed inset-0 flex flex-col items-center justify-center bg-bg-primary z-[10000]" style={{ animation: 'fadeOut 0.5s ease-out 1s forwards' }}>
+            <div className="w-[60px] h-[60px] border-4 border-accent-primary/20 border-t-accent-primary rounded-full animate-spin" />
+            <p className="mt-5 text-text-secondary">
               Loading Visualization...
             </p>
           </div>
@@ -309,18 +347,12 @@ function App() {
         )}
         
         {/* Info overlay */}
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          zIndex: 10,
-          maxWidth: '350px'
-        }}>
-          <div className="panel">
-            <div className="panel-title">
+        <div className="absolute top-5 left-5 z-10 max-w-[350px]">
+          <div className="bg-bg-secondary border border-border-subtle rounded-md p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className="text-xl font-semibold mb-4 text-text-primary leading-tight">
               {useWebSocketMode ? '🔗 WebSocket Mode' : '🎬 Demo Mode'}
             </div>
-            <div className="panel-content">
+            <div className="text-sm text-text-secondary leading-normal space-y-2">
               {useWebSocketMode ? (
                 <>
                   <p>
@@ -329,7 +361,7 @@ function App() {
                   <p>📡 Session: {sessionId || 'None'}</p>
                   <p>🧠 Thinking: {isThinking ? 'Yes' : 'No'}</p>
                   {isComplete && <p>✨ Complete!</p>}
-                  {error && <p style={{ color: '#FF6B6B' }}>❌ {error}</p>}
+                  {error && <p className="text-accent-error">❌ {error}</p>}
                   <p>📊 Nodes: {storeNodes.length}</p>
                 </>
               ) : (
@@ -338,49 +370,33 @@ function App() {
                 </>
               )}
               
-              <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)' }}>
-                <strong>Controls:</strong>
-                <p style={{ margin: '4px 0' }}>🖱️ Drag - Pan view</p>
-                <p style={{ margin: '4px 0' }}>🔍 Scroll - Zoom in/out</p>
-                <p style={{ margin: '4px 0' }}>🖱️ Click node - Show details</p>
-                <p style={{ margin: '4px 0' }}>🖱️ Double-click - Focus on node</p>
+              <div className="mt-2 text-[0.85rem] p-2 bg-white/5 rounded">
+                <strong className="font-semibold">Controls:</strong>
+                <p className="my-1">🖱️ Drag - Pan view</p>
+                <p className="my-1">🔍 Scroll - Zoom in/out</p>
+                <p className="my-1">🖱️ Click node - Show details</p>
+                <p className="my-1">🖱️ Double-click - Focus on node</p>
               </div>
               
-              <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
-                <strong>Node Types:</strong>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-                  <span className="badge badge-analysis" style={{ fontSize: '0.7rem' }}>Analysis</span>
-                  <span className="badge badge-decision" style={{ fontSize: '0.7rem' }}>Decision</span>
-                  <span className="badge badge-verification" style={{ fontSize: '0.7rem' }}>Verify</span>
-                  <span className="badge badge-alternative" style={{ fontSize: '0.7rem' }}>Alt</span>
-                  <span className="badge badge-implementation" style={{ fontSize: '0.7rem' }}>Impl</span>
+              <div className="mt-2 text-[0.85rem]">
+                <strong className="font-semibold">Node Types:</strong>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  <span className="inline-block px-2.5 py-1 rounded bg-node-analysis text-white text-[0.7rem] font-semibold uppercase tracking-wide">Analysis</span>
+                  <span className="inline-block px-2.5 py-1 rounded bg-node-decision text-white text-[0.7rem] font-semibold uppercase tracking-wide">Decision</span>
+                  <span className="inline-block px-2.5 py-1 rounded bg-node-verification text-white text-[0.7rem] font-semibold uppercase tracking-wide">Verify</span>
+                  <span className="inline-block px-2.5 py-1 rounded bg-node-alternative text-white text-[0.7rem] font-semibold uppercase tracking-wide">Alt</span>
+                  <span className="inline-block px-2.5 py-1 rounded bg-node-implementation text-white text-[0.7rem] font-semibold uppercase tracking-wide">Impl</span>
                 </div>
               </div>
               <button 
                 onClick={() => setShowScene(false)}
-                style={{ marginTop: '12px', width: '100%' }}
+                className="mt-3 w-full px-5 py-2.5 bg-bg-secondary text-text-primary border border-border-default rounded-md text-sm font-medium hover:border-border-strong hover:bg-bg-tertiary transition-all duration-fast"
               >
                 ← Back to Home
               </button>
             </div>
           </div>
         </div>
-        
-        {/* Loading and animation styles */}
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-            
-            @keyframes fadeOut {
-              0% { opacity: 1; visibility: visible; }
-              99% { opacity: 0; visibility: visible; }
-              100% { opacity: 0; visibility: hidden; }
-            }
-          `}
-        </style>
           </div>
         </div>
       </div>
@@ -388,164 +404,117 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      
-      {/* Hero Section with Grid Background */}
-      <div className="relative flex-1 overflow-hidden">
-        {/* Grid Pattern Background */}
-        <div className="absolute inset-0 bg-bg-primary" style={{
-          backgroundImage: `
-            linear-gradient(to right, #E5E5E5 1px, transparent 1px),
-            linear-gradient(to bottom, #E5E5E5 1px, transparent 1px)
-          `,
-          backgroundSize: '80px 80px',
-          opacity: 0.4
-        }} />
-        
-        {/* Subtle Dot Pattern Overlay */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle, #D4D4D4 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-          opacity: 0.15
-        }} />
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-8 py-20 max-w-6xl mx-auto">
-          
-          {/* Hero Text */}
-          <div className="text-center mb-16 max-w-4xl">
-            <h1 className="text-5xl font-semibold text-text-primary mb-6 tracking-tight leading-tight">
-              Visualize AI Reasoning
-            </h1>
-            <p className="text-xl text-text-secondary leading-relaxed mb-8">
-              Watch Claude's extended thinking unfold in real-time. See every thought node, decision point, and reasoning path visualized as an interactive graph.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => {
-                  setUseWebSocketMode(false)
-                  setShowScene(true)
-                }}
-                className="px-8 py-4 bg-accent-primary text-white font-semibold rounded-md hover:bg-[#1D4ED8] transition-all duration-fast shadow-md hover:shadow-lg"
-              >
-                Try Demo
-              </button>
-              <button
-                onClick={() => {
-                  const formElement = document.getElementById('problem-form')
-                  formElement?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="px-8 py-4 bg-bg-secondary text-text-primary font-semibold rounded-md border border-border-default hover:border-border-strong hover:bg-bg-tertiary transition-all duration-fast"
-              >
-                Submit Problem →
-              </button>
+    <main className="flex min-h-screen relative mx-4 md:mx-8 lg:mx-36 border-l border-r border-gray-200 bg-transparent">
+      {/* Top left project title */}
+      <div className="absolute top-8 left-8">
+        <header className="text-sm text-gray-800 font-medium">
+          Let's Think Step by Step
+        </header>
+        <header className="text-sm text-gray-500 tracking-normal">
+          By <a href="https://moorching.com" className="underline underline-offset-2" target="_self">Akash Moorching</a>
+        </header>
+      </div>
+
+
+      {/* Center content - problem submission */}
+      <div className="flex items-center justify-center w-full px-8">
+        <div className="max-w-2xl w-full text-left">
+        <p className="text-gray-800 text-sm leading-relaxed mb-8">
+          Inspired by <a
+            href="https://www.anthropic.com/research/tracing-thoughts-language-model"
+            className="underline underline-offset-2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Anthropic's circuit tracing research</a> on how language models think, <span className="font-bold text-gray-900">Stepper</span> renders Claude 4.5's internal reasoning chain as an interactive force-directed graph. Watch as thought nodes emerge in real-time: analytical steps, decision points, verification checks, and alternative approaches Claude considers and discards.
+          <br /><br />
+          Submit a complex coding problem, system design challenge, or algorithmic puzzle below. Each node represents a distinct reasoning step—hover to read the full thought, click to explore dependencies, and trace the logical pathway from problem to solution.
+        </p>
+
+          {/* Problem submission form */}
+          <form onSubmit={handleSubmitProblem} className="mb-6">
+            {/* Example problem buttons */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {exampleProblems.map((example, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setProblem(example)}
+                  disabled={isSubmitting}
+                  className="px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md text-gray-600 hover:border-gray-400 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {example}
+                </button>
+              ))}
             </div>
-          </div>
-          
-          {/* Visualization Preview/Demo Stats */}
-          <div className="grid grid-cols-3 gap-8 mb-20 max-w-2xl w-full">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent-primary mb-2">5</div>
-              <div className="text-sm text-text-secondary uppercase tracking-wide">Node Types</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent-primary mb-2">Real-time</div>
-              <div className="text-sm text-text-secondary uppercase tracking-wide">Updates</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent-primary mb-2">2D</div>
-              <div className="text-sm text-text-secondary uppercase tracking-wide">Graph View</div>
-            </div>
-          </div>
-          
-          {/* Node Types Legend */}
-          <div className="mb-20 max-w-3xl w-full">
-            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-6 text-center">
-              Thought Node Types
-            </h3>
-            <div className="grid grid-cols-5 gap-4">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-md bg-node-analysis flex items-center justify-center text-white font-semibold text-xs">
-                  A
-                </div>
-                <span className="text-xs text-text-secondary text-center">Analysis</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-md bg-node-decision flex items-center justify-center text-white font-semibold text-xs">
-                  D
-                </div>
-                <span className="text-xs text-text-secondary text-center">Decision</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-md bg-node-verification flex items-center justify-center text-white font-semibold text-xs">
-                  V
-                </div>
-                <span className="text-xs text-text-secondary text-center">Verification</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-md bg-node-alternative flex items-center justify-center text-white font-semibold text-xs">
-                  A
-                </div>
-                <span className="text-xs text-text-secondary text-center">Alternative</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-md bg-node-implementation flex items-center justify-center text-white font-semibold text-xs">
-                  I
-                </div>
-                <span className="text-xs text-text-secondary text-center">Implementation</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Submit Form Section */}
-          <div id="problem-form" className="w-full max-w-4xl">
-            <ProblemSubmitForm
-              onSessionCreated={(sessionId) => {
-                console.log('Session created:', sessionId)
-                setSessionId(sessionId)
-                setUseWebSocketMode(true)
-                setTimeout(() => {
-                  setShowScene(true)
-                }, 100)
-              }}
+
+            <textarea
+              value={problem}
+              onChange={(e) => setProblem(e.target.value)}
+              placeholder="Describe your problem... (e.g., How would you implement a distributed cache?)"
+              rows={4}
+              disabled={isSubmitting}
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 text-sm resize-vertical focus:outline-none focus:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
             />
-          </div>
-          
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8 mt-20 max-w-5xl w-full">
-            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Interactive Exploration
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Pan, zoom, and click nodes to explore the reasoning graph. Each node reveals detailed information about that step in the thinking process.
-              </p>
-            </div>
             
-            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Hierarchical Layout
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Automatic graph layout algorithm positions nodes based on their relationships and depth, making complex reasoning paths easy to follow.
-              </p>
-            </div>
+            {submitError && (
+              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">
+                {submitError}
+              </div>
+            )}
             
-            <div className="bg-bg-secondary border border-border-subtle rounded-md p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Real-time Streaming
-              </h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                Watch thoughts appear as they're generated. WebSocket integration provides live updates as Claude processes your problem.
-              </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs text-gray-500">
+                {problem.length}/5000 characters (minimum 10)
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmitting || problem.trim().length < 10}
+                className="px-6 py-2 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Analyzing...' : 'Start Analysis'}
+              </button>
             </div>
+          </form>
+
+          {/* Demo link */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <button
+              onClick={() => {
+                setUseWebSocketMode(false)
+                setShowScene(true)
+              }}
+              className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
+            >
+              View demo visualization
+              <span className="inline-block">→</span>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Right side bottom navigation */}
+      <nav className="absolute bottom-8 right-8 flex flex-col gap-4 items-end">
+        <a
+          href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
+          className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Research
+          <span className="inline-block">↗</span>
+        </a>
+
+        <a
+          href="https://github.com/AMOORCHING/stepper"
+          className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2 transition-all duration-200 hover:translate-x-1"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Github
+          <span className="inline-block">↗</span>
+        </a>
+      </nav>
+    </main>
   )
 }
 
