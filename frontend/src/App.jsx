@@ -1,43 +1,39 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
+import { updateNodePositions } from './utils/layoutAlgorithm'
 
-// Test data: multiple nodes with different types
-const testNodes = [
+// Test data: multiple nodes with different types (without manual positions)
+const testNodesRaw = [
   {
     id: 'node1',
     type: 'Analysis',
     confidence: 0.8,
-    position: { x: 0, y: 5, z: 0 },
     content: 'Initial analysis of the problem'
   },
   {
     id: 'node2',
     type: 'Decision',
     confidence: 0.9,
-    position: { x: -3, y: 0, z: 2 },
     content: 'Decision point: choose approach A'
   },
   {
     id: 'node3',
     type: 'Alternative',
     confidence: 0.6,
-    position: { x: 3, y: 0, z: 2 },
     content: 'Alternative approach B'
   },
   {
     id: 'node4',
     type: 'Verification',
     confidence: 1.0,
-    position: { x: 0, y: -5, z: 0 },
     content: 'Verify solution correctness'
   },
   {
     id: 'node5',
     type: 'Implementation',
     confidence: 0.7,
-    position: { x: 0, y: -10, z: -2 },
     content: 'Implement final solution'
   }
 ]
@@ -50,6 +46,9 @@ const testEdges = [
   { from: 'node3', to: 'node4', relationshipType: 'temporal', strength: 0.6 },
   { from: 'node4', to: 'node5', relationshipType: 'logical', strength: 0.9 }
 ]
+
+// Calculate positions using the layout algorithm
+const testNodes = updateNodePositions(testNodesRaw, testEdges)
 
 function TestNodes() {
   const [selectedNode, setSelectedNode] = useState(null)
@@ -111,13 +110,14 @@ function App() {
           maxWidth: '350px'
         }}>
           <div className="panel">
-            <div className="panel-title">Node & Edge Rendering Test</div>
+            <div className="panel-title">3D Visualization Active</div>
             <div className="panel-content">
-              <p>✅ 5 nodes with different types</p>
-              <p>✅ 5 edges with varied styles</p>
-              <p>✅ Emissive materials active</p>
-              <p>✅ Confidence-based scaling</p>
-              <p>✅ Click/hover interactions</p>
+              <p>✅ Hierarchical layout algorithm</p>
+              <p>✅ Auto-positioned nodes (5 levels)</p>
+              <p>✅ Depth-based Y positioning</p>
+              <p>✅ Breadth-based X spacing</p>
+              <p>✅ Random Z variation</p>
+              <p>✅ Emissive materials & scaling</p>
               <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
                 <strong>Node Types:</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
@@ -184,6 +184,19 @@ function App() {
           <p>✅ ThoughtEdge3D with Line rendering</p>
           <p>✅ Edge coloring by relationship type</p>
           <p>✅ Strength-based line width (1-3px)</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 4.0 Complete - Layout Algorithm</div>
+        <div className="panel-content">
+          <p>✅ calculateHierarchicalLayout function</p>
+          <p>✅ Depth calculation via graph traversal</p>
+          <p>✅ Breadth indexing for siblings</p>
+          <p>✅ Y position: -depth × 5 units</p>
+          <p>✅ X position: centered with 3-unit spacing</p>
+          <p>✅ Z position: random -2 to +2 variation</p>
+          <p>✅ updateNodePositions helper function</p>
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
