@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { Line } from '@react-three/drei'
 import { getEdgeStyle } from '../utils/nodeColors'
+import { animateEdgeDrawing } from '../utils/animations'
 
 /**
  * ThoughtEdge3D - Renders a connection between two thought nodes
@@ -13,9 +14,17 @@ import { getEdgeStyle } from '../utils/nodeColors'
  *   - strength: 0-1 value affecting line width (optional, defaults to 0.5)
  * @param {object} fromNode - Source node with position {x, y, z}
  * @param {object} toNode - Target node with position {x, y, z}
+ * @param {number} appearDelay - Delay before edge appears (ms)
  */
-export default function ThoughtEdge3D({ edge, fromNode, toNode }) {
+export default function ThoughtEdge3D({ edge, fromNode, toNode, appearDelay = 0 }) {
   const lineRef = useRef()
+  
+  // Animate edge drawing on mount
+  useEffect(() => {
+    if (lineRef.current) {
+      animateEdgeDrawing(lineRef, appearDelay)
+    }
+  }, [appearDelay])
   
   if (!fromNode || !toNode) return null
   

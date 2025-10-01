@@ -62,29 +62,45 @@ function TestNodes() {
     console.log('Node hover:', node.id, isHovering)
   }
   
+  // Stagger delay: 100ms between each node
+  const STAGGER_DELAY = 100
+  
+  // Mark the last node as pulsing (most recently added)
+  const newestNodeId = testNodes[testNodes.length - 1]?.id
+  
   return (
     <>
       {/* Render edges first (so they appear behind nodes) */}
       {testEdges.map((edge, index) => {
         const fromNode = testNodes.find(n => n.id === edge.from)
         const toNode = testNodes.find(n => n.id === edge.to)
+        
+        // Calculate delay: edges appear after their connected nodes
+        const fromIndex = testNodes.findIndex(n => n.id === edge.from)
+        const toIndex = testNodes.findIndex(n => n.id === edge.to)
+        const maxIndex = Math.max(fromIndex, toIndex)
+        const edgeDelay = (maxIndex + 1) * STAGGER_DELAY + 400 // Extra 400ms after node appears
+        
         return (
           <ThoughtEdge3D
             key={`edge-${index}`}
             edge={edge}
             fromNode={fromNode}
             toNode={toNode}
+            appearDelay={edgeDelay}
           />
         )
       })}
       
-      {/* Render nodes */}
-      {testNodes.map(node => (
+      {/* Render nodes with stagger */}
+      {testNodes.map((node, index) => (
         <ThoughtNode3D
           key={node.id}
           node={node}
           onClick={handleNodeClick}
           onHover={handleNodeHover}
+          appearDelay={index * STAGGER_DELAY}
+          isPulsing={node.id === newestNodeId}
         />
       ))}
     </>
@@ -113,11 +129,11 @@ function App() {
             <div className="panel-title">3D Visualization Active</div>
             <div className="panel-content">
               <p>✅ Hierarchical layout algorithm</p>
-              <p>✅ Auto-positioned nodes (5 levels)</p>
-              <p>✅ Depth-based Y positioning</p>
-              <p>✅ Breadth-based X spacing</p>
-              <p>✅ Random Z variation</p>
-              <p>✅ Emissive materials & scaling</p>
+              <p>✅ Staggered node appearance (100ms)</p>
+              <p>✅ Elastic bounce animation (800ms)</p>
+              <p>✅ Newest node pulsing effect</p>
+              <p>✅ Smooth hover scaling (1.3x)</p>
+              <p>✅ Edge fade-in animations (500ms)</p>
               <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
                 <strong>Node Types:</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
@@ -197,6 +213,19 @@ function App() {
           <p>✅ X position: centered with 3-unit spacing</p>
           <p>✅ Z position: random -2 to +2 variation</p>
           <p>✅ updateNodePositions helper function</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 5.0 Complete - Animation System</div>
+        <div className="panel-content">
+          <p>✅ animations.js with anime.js helpers</p>
+          <p>✅ Node appearance: elastic bounce (800ms)</p>
+          <p>✅ Node pulse: oscillating emissive (2000ms)</p>
+          <p>✅ Edge drawing: fade-in effect (500ms)</p>
+          <p>✅ Stagger delay: 100ms between nodes</p>
+          <p>✅ Newest node marked as pulsing</p>
+          <p>✅ Hover animation: smooth scale to 1.3x</p>
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
