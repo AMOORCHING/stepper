@@ -29,6 +29,9 @@ export function useWebSocket({
   const reconnectTimeoutRef = useRef(null)
   const reconnectAttemptsRef = useRef(0)
   
+  // Version check - v2 uses data.data instead of data.thought
+  console.log('WebSocket hook version: v2.0 - using data.data')
+  
   const MAX_RECONNECT_ATTEMPTS = 5
   const RECONNECT_DELAY = 2000
 
@@ -41,7 +44,7 @@ export function useWebSocket({
     const connect = () => {
       try {
         // Get WebSocket URL from env or default to localhost
-        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
+        const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8001'
         const url = `${wsUrl}/ws/${sessionId}`
         
         console.log(`Connecting to WebSocket: ${url}`)
@@ -59,32 +62,34 @@ export function useWebSocket({
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data)
-            console.log('WebSocket message received:', data)
-
+            
             // Handle different event types
             switch (data.event_type) {
               case 'new_thought':
-                if (onNewThought) {
-                  onNewThought(data.thought)
+                if (onNewThought && data.data) {
+                  console.log('✓ New thought node:', data.data.id, '- type:', data.data.type)
+                  onNewThought(data.data)
+                } else {
+                  console.error('✗ new_thought event missing data:', data)
                 }
                 break
 
               case 'thinking_complete':
                 if (onThinkingComplete) {
-                  onThinkingComplete(data)
+                  onThinkingComplete(data.data)
                 }
                 break
 
               case 'solution_ready':
                 if (onSolutionReady) {
-                  onSolutionReady(data.solution)
+                  onSolutionReady(data.data)
                 }
                 break
 
               case 'error':
-                console.error('WebSocket error event:', data.error)
+                console.error('WebSocket error event:', data.data)
                 if (onError) {
-                  onError(data.error)
+                  onError(data.data)
                 }
                 break
 

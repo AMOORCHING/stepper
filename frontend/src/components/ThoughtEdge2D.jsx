@@ -1,10 +1,9 @@
 import { useRef, useEffect } from 'react'
-import { Line } from '@react-three/drei'
 import { getEdgeStyle } from '../utils/nodeColors'
-import { animateEdgeDrawing } from '../utils/animations'
+import { animateEdgeDrawing } from '../utils/animations2d'
 
 /**
- * ThoughtEdge3D - Renders a connection between two thought nodes
+ * ThoughtEdge2D - Renders a connection between two thought nodes as a simple line
  * 
  * Props:
  * @param {object} edge - Edge data containing:
@@ -12,11 +11,11 @@ import { animateEdgeDrawing } from '../utils/animations'
  *   - to: target node ID
  *   - relationshipType: 'logical', 'temporal', or 'alternative'
  *   - strength: 0-1 value affecting line width (optional, defaults to 0.5)
- * @param {object} fromNode - Source node with position {x, y, z}
- * @param {object} toNode - Target node with position {x, y, z}
+ * @param {object} fromNode - Source node with position {x, y}
+ * @param {object} toNode - Target node with position {x, y}
  * @param {number} appearDelay - Delay before edge appears (ms)
  */
-export default function ThoughtEdge3D({ edge, fromNode, toNode, appearDelay = 0 }) {
+export default function ThoughtEdge2D({ edge, fromNode, toNode, appearDelay = 0 }) {
   const lineRef = useRef()
   
   // Animate edge drawing on mount
@@ -32,25 +31,20 @@ export default function ThoughtEdge3D({ edge, fromNode, toNode, appearDelay = 0 
   const style = getEdgeStyle(edge.relationshipType || 'logical')
   
   // Calculate line width based on connection strength (1-3 pixels)
-  // Default strength to 0.5 if not provided
   const strength = edge.strength !== undefined ? edge.strength : 0.5
   const lineWidth = 1 + (strength * 2) // Range: 1-3
-  
-  // Create points array for the line
-  const points = [
-    [fromNode.position.x, fromNode.position.y, fromNode.position.z],
-    [toNode.position.x, toNode.position.y, toNode.position.z]
-  ]
 
   return (
-    <Line
+    <line
       ref={lineRef}
-      points={points}
-      color={style.color}
-      lineWidth={lineWidth}
-      transparent={true}
+      x1={fromNode.position.x}
+      y1={fromNode.position.y}
+      x2={toNode.position.x}
+      y2={toNode.position.y}
+      stroke={style.color}
+      strokeWidth={lineWidth}
       opacity={style.opacity}
-      dashed={false}
+      strokeLinecap="square"
     />
   )
 }

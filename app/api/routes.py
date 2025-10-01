@@ -95,7 +95,7 @@ async def run_analysis(session_id: str, problem_text: str):
                 await websocket_manager.broadcast_new_thought(sess_id, node_dict)
         
         # Define callback for token usage
-        def on_token_usage(usage: dict):
+        async def on_token_usage(usage: dict):
             """Update session with token usage."""
             session_manager.update_session(
                 session_id,
@@ -108,7 +108,7 @@ async def run_analysis(session_id: str, problem_text: str):
             await websocket_manager.broadcast_error(session_id, error_msg, "api_error")
         
         # Define callback for solution
-        def on_solution(solution_text: str):
+        async def on_solution(solution_text: str):
             """Store solution in session."""
             session_manager.update_session(session_id, solution_text=solution_text)
         
@@ -116,9 +116,9 @@ async def run_analysis(session_id: str, problem_text: str):
         result = await anthropic_service.analyze_problem(
             problem_text=problem_text,
             session_id=session_id,
-            on_thinking_chunk=lambda sess_id, chunk: asyncio.create_task(on_thinking_chunk(sess_id, chunk)),
+            on_thinking_chunk=on_thinking_chunk,      # Remove asyncio.create_task wrapper
             on_token_usage=on_token_usage,
-            on_error=lambda msg: asyncio.create_task(on_error(msg)),
+            on_error=on_error,                        # Remove asyncio.create_task wrapper
             on_solution=on_solution
         )
         

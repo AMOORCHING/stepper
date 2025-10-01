@@ -1,7 +1,7 @@
 /**
- * Layout Algorithm for 3D Hierarchical Node Positioning
+ * Layout Algorithm for 2D Hierarchical Node Positioning
  * 
- * This module calculates optimal 3D positions for thought nodes based on
+ * This module calculates optimal 2D positions for thought nodes based on
  * their dependency relationships, creating a hierarchical tree-like structure.
  */
 
@@ -96,37 +96,37 @@ function calculateBreadth(nodes, depthMap) {
 }
 
 /**
- * Calculate 3D position for a node based on layout parameters
+ * Calculate 2D position for a node based on layout parameters
  * 
  * @param {object} layout - Layout info {depth, breadthIndex, breadthCount}
- * @param {number} seed - Random seed for Z variation (optional)
- * @returns {object} Position {x, y, z}
+ * @returns {object} Position {x, y}
  */
-function calculatePosition(layout, seed = Math.random()) {
+function calculatePosition(layout) {
   const { depth, breadthIndex, breadthCount } = layout
   
-  // Y position: vertical layers with 5 unit spacing
-  // Negative Y so tree grows downward
-  const y = -depth * 5
+  // Ensure all values are valid numbers
+  const safeDepth = Number.isFinite(depth) ? depth : 0
+  const safeBreadthIndex = Number.isFinite(breadthIndex) ? breadthIndex : 0
+  const safeBreadthCount = Number.isFinite(breadthCount) && breadthCount > 0 ? breadthCount : 1
   
-  // X position: horizontal spread with 3 unit spacing
-  // Centered around x=0
-  const x = (breadthIndex - breadthCount / 2) * 3
+  // Y position: vertical layers with 200 pixel spacing (increased for better visibility)
+  // Start at 100 so first layer is visible
+  const y = safeDepth * 200 + 100
   
-  // Z position: random variation for depth perception
-  // Range: -2 to +2
-  const z = (seed * 4) - 2
+  // X position: horizontal spread with 250 pixel spacing (increased for better visibility)
+  // Centered around x=1000 (middle of 2000-wide viewBox)
+  const x = 1000 + (safeBreadthIndex - (safeBreadthCount - 1) / 2) * 250
   
-  return { x, y, z }
+  return { x, y }
 }
 
 /**
  * Main layout calculation function
- * Computes hierarchical 3D positions for all nodes
+ * Computes hierarchical 2D positions for all nodes
  * 
  * @param {Array} nodes - Array of node objects with 'id' property
  * @param {Array} edges - Array of edge objects with 'from' and 'to' properties
- * @returns {Map} Map of nodeId -> {x, y, z} position
+ * @returns {Map} Map of nodeId -> {x, y} position
  */
 export function calculateHierarchicalLayout(nodes, edges) {
   if (!nodes || nodes.length === 0) {
@@ -139,14 +139,12 @@ export function calculateHierarchicalLayout(nodes, edges) {
   // Step 2: Calculate breadth indices
   const layoutMap = calculateBreadth(nodes, depthMap)
   
-  // Step 3: Calculate 3D positions
+  // Step 3: Calculate 2D positions
   const positionMap = new Map()
-  nodes.forEach((node, index) => {
+  nodes.forEach((node) => {
     const layout = layoutMap.get(node.id)
     if (layout) {
-      // Use index as seed for consistent random Z values
-      const seed = (index * 0.618033988749895) % 1 // Golden ratio for distribution
-      const position = calculatePosition(layout, seed)
+      const position = calculatePosition(layout)
       positionMap.set(node.id, position)
     }
   })
@@ -160,14 +158,14 @@ export function calculateHierarchicalLayout(nodes, edges) {
  * 
  * @param {Array} nodes - Array of node objects
  * @param {Array} edges - Array of edge objects
- * @returns {Array} New array of nodes with position property {x, y, z}
+ * @returns {Array} New array of nodes with position property {x, y}
  */
 export function updateNodePositions(nodes, edges) {
   const positionMap = calculateHierarchicalLayout(nodes, edges)
   
   return nodes.map(node => ({
     ...node,
-    position: positionMap.get(node.id) || { x: 0, y: 0, z: 0 }
+    position: positionMap.get(node.id) || { x: 0, y: 0 }
   }))
 }
 

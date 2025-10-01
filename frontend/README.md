@@ -55,8 +55,8 @@ A beautiful, interactive 3D visualization of AI thinking processes built with Re
 
 3. **Configure environment variables:**
    ```env
-   VITE_API_URL=http://localhost:8000
-   VITE_WS_URL=ws://localhost:8000
+   VITE_API_URL=http://localhost:8001
+   VITE_WS_URL=ws://localhost:8001
    ```
 
 ## 🏃 Development

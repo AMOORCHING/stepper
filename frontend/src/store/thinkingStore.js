@@ -34,35 +34,48 @@ export const useThinkingStore = create((set, get) => ({
    * Calculates position using layout algorithm
    */
   addNode: (nodeData) => {
-    const state = get()
-    
-    // Create node with proper structure
-    const newNode = {
-      id: nodeData.id || `node-${Date.now()}`,
-      type: nodeData.type || 'Analysis',
-      confidence: nodeData.confidence || 0.5,
-      content: nodeData.content || '',
-      keywords: nodeData.keywords || [],
-      dependencies: nodeData.dependencies || [],
-      timestamp: nodeData.timestamp || new Date().toISOString()
+    try {
+      if (!nodeData) {
+        console.error('addNode called with null/undefined nodeData')
+        return null
+      }
+      
+      const state = get()
+      
+      // Create node with proper structure
+      const newNode = {
+        id: nodeData.id || `node-${Date.now()}`,
+        type: nodeData.type || 'Analysis',
+        confidence: nodeData.confidence || 0.5,
+        content: nodeData.content || '',
+        keywords: nodeData.keywords || [],
+        dependencies: nodeData.dependencies || [],
+        timestamp: nodeData.timestamp || new Date().toISOString()
+      }
+      
+      console.log('Creating node in store:', newNode.id)
+
+      const newRawNodes = [...state.rawNodes, newNode]
+      
+      // Build edges from dependencies
+      const newEdges = buildEdgesFromNodes(newRawNodes)
+      
+      // Calculate positions for all nodes
+      const nodesWithPositions = updateNodePositions(newRawNodes, newEdges)
+
+      set({
+        rawNodes: newRawNodes,
+        nodes: nodesWithPositions,
+        edges: newEdges,
+        focusedNodeId: newNode.id // Focus on newest node
+      })
+
+      console.log('Node added successfully. Total nodes:', nodesWithPositions.length)
+      return newNode
+    } catch (error) {
+      console.error('Error adding node:', error, 'nodeData:', nodeData)
+      return null
     }
-
-    const newRawNodes = [...state.rawNodes, newNode]
-    
-    // Build edges from dependencies
-    const newEdges = buildEdgesFromNodes(newRawNodes)
-    
-    // Calculate positions for all nodes
-    const nodesWithPositions = updateNodePositions(newRawNodes, newEdges)
-
-    set({
-      rawNodes: newRawNodes,
-      nodes: nodesWithPositions,
-      edges: newEdges,
-      focusedNodeId: newNode.id // Focus on newest node
-    })
-
-    return newNode
   },
 
   /**

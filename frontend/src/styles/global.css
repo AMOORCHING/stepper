@@ -73,7 +73,7 @@ canvas {
   }
 }
 
-/* Scrollbar Styling */
+/* Scrollbar Styling - Sharp */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -85,11 +85,11 @@ canvas {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-hover);
+  background: var(--text-primary);
 }
 
 /* Selection */
@@ -117,13 +117,13 @@ canvas {
   }
 }
 
-/* Panel Styles */
+/* Panel Styles - Brutal Minimalism */
 .panel {
   background-color: var(--bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 0;
   padding: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 .panel-title {
@@ -138,25 +138,24 @@ canvas {
   color: var(--text-secondary);
 }
 
-/* Button Styles */
+/* Button Styles - Sharp Corners */
 button {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border: 2px solid var(--color-border);
+  border-radius: 0;
   padding: 8px 16px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.1s ease;
 }
 
 button:hover {
-  background-color: var(--color-hover);
-  border-color: var(--color-analysis);
+  border-color: var(--text-primary);
 }
 
 button:active {
-  transform: scale(0.98);
+  background-color: var(--color-hover);
 }
 
 button:disabled {
@@ -164,11 +163,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Badge Styles */
+/* Badge Styles - No Border Radius */
 .badge {
   display: inline-block;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;

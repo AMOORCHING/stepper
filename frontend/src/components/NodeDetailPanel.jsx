@@ -41,27 +41,13 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
     width: '350px',
     maxHeight: 'calc(100vh - 40px)',
     overflowY: 'auto',
-    animation: 'slideIn 0.3s ease-out'
+    animation: 'slideIn 0.3s ease-out',
+    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)' // Add shadow for depth without backdrop
   }
 
   return (
     <>
-      {/* Backdrop for click-outside to close */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.3)',
-          zIndex: 99,
-          cursor: 'pointer'
-        }}
-      />
-
-      {/* Detail Panel */}
+      {/* Detail Panel - No backdrop to avoid darkening the scene */}
       <div className="panel" style={panelStyle}>
         <div className="panel-title" style={{ 
           display: 'flex', 
@@ -116,13 +102,13 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               width: '100%',
               height: '6px',
               background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '3px',
+              borderRadius: '0',
               overflow: 'hidden'
             }}>
               <div style={{
                 width: `${confidencePercent}%`,
                 height: '100%',
-                background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                background: color,
                 transition: 'width 0.3s ease'
               }} />
             </div>
@@ -141,7 +127,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               margin: 0,
               padding: '10px',
               background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '4px',
+              borderRadius: '0',
               lineHeight: 1.5,
               fontSize: '0.9rem',
               whiteSpace: 'pre-wrap',
@@ -172,7 +158,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
                     style={{
                       padding: '4px 10px',
                       background: 'rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
+                      borderRadius: '0',
                       fontSize: '0.8rem',
                       border: '1px solid rgba(255, 255, 255, 0.1)'
                     }}
@@ -197,7 +183,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               <div style={{
                 padding: '10px',
                 background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '4px',
+                borderRadius: '0',
                 fontSize: '0.85rem'
               }}>
                 {node.dependencies.map((depId, index) => (
@@ -225,7 +211,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               <div style={{
                 padding: '8px',
                 background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '4px',
+                borderRadius: '0',
                 fontSize: '0.8rem',
                 fontFamily: 'monospace',
                 display: 'grid',
@@ -253,7 +239,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
           <div style={{
             padding: '8px',
             background: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: '4px',
+            borderRadius: '0',
             fontSize: '0.75rem',
             fontFamily: 'monospace',
             color: 'var(--text-secondary)',
@@ -267,10 +253,10 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
             marginTop: '16px',
             padding: '10px',
             background: 'rgba(78, 205, 196, 0.1)',
-            borderRadius: '4px',
+            borderRadius: '0',
             fontSize: '0.8rem',
             color: 'var(--text-secondary)',
-            border: '1px solid rgba(78, 205, 196, 0.2)'
+            border: '1px solid rgba(78, 205, 196, 0.3)'
           }}>
             💡 <strong>Tip:</strong> Double-click the node to focus camera on it
           </div>

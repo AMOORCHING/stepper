@@ -45,7 +45,7 @@ class AnthropicService:
             # Create streaming request
             async with self.client.messages.stream(
                 model=self.model,
-                max_tokens=4096,
+                max_tokens=max(16384, self.thinking_budget_tokens + 8192),
                 thinking={
                     "type": "enabled",
                     "budget_tokens": self.thinking_budget_tokens
@@ -79,11 +79,7 @@ class AnthropicService:
                                     
                                     # Send chunk to parser in real-time if callback provided
                                     if on_thinking_chunk:
-                                        await asyncio.to_thread(
-                                            on_thinking_chunk,
-                                            session_id,
-                                            chunk
-                                        )
+                                        await on_thinking_chunk(session_id, chunk)
                                 
                                 elif delta.type == 'text_delta':
                                     # Accumulate solution text
@@ -101,13 +97,13 @@ class AnthropicService:
                                     'output_tokens': getattr(event.usage, 'output_tokens', 0)
                                 }
                                 if on_token_usage:
-                                    await asyncio.to_thread(on_token_usage, usage_dict)
+                                    await on_token_usage(usage_dict)
                     
                     except Exception as chunk_error:
                         # Skip problematic chunks but continue processing
                         error_msg = f"Error processing stream chunk: {str(chunk_error)}"
                         if on_error:
-                            await asyncio.to_thread(on_error, error_msg)
+                            await on_error(error_msg)
                         continue
                 
                 # Get final message for complete token usage
@@ -115,7 +111,7 @@ class AnthropicService:
                 
                 # Send final solution if callback provided
                 if on_solution and full_solution:
-                    await asyncio.to_thread(on_solution, full_solution)
+                    await on_solution(full_solution)
                 
                 return {
                     'session_id': session_id,
@@ -134,7 +130,7 @@ class AnthropicService:
             # Handle API errors (rate limits, authentication, network errors)
             error_msg = f"Anthropic API error: {str(e)}"
             if on_error:
-                await asyncio.to_thread(on_error, error_msg)
+                await on_error(error_msg)
             
             # Re-raise for upstream handling
             raise Exception(error_msg) from e

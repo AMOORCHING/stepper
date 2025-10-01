@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Stats } from '@react-three/drei'
-import ThinkingScene from './components/ThinkingScene'
-import ThoughtNode3D from './components/ThoughtNode3D'
-import ThoughtEdge3D from './components/ThoughtEdge3D'
+import ThinkingScene2D from './components/ThinkingScene2D'
+import ThoughtNode2D from './components/ThoughtNode2D'
+import ThoughtEdge2D from './components/ThoughtEdge2D'
 import NodeDetailPanel from './components/NodeDetailPanel'
-import PerformanceMonitor, { useDevicePerformance, PerformanceStats } from './components/PerformanceMonitor'
 import { updateNodePositions } from './utils/layoutAlgorithm'
 import { useThinkingStore } from './store/thinkingStore'
 import { useWebSocket } from './hooks/useWebSocket'
+import ProblemSubmitForm from './components/ProblemSubmitForm'
 
 // Test data: multiple nodes with different types (without manual positions)
 const testNodesRaw = [
@@ -91,7 +90,7 @@ function TestNodes({ nodes = testNodes, edges = testEdges, onNodeClick, onNodeDo
         const edgeDelay = (maxIndex + 1) * STAGGER_DELAY + 400 // Extra 400ms after node appears
         
         return (
-          <ThoughtEdge3D
+          <ThoughtEdge2D
             key={`edge-${index}`}
             edge={edge}
             fromNode={fromNode}
@@ -103,7 +102,7 @@ function TestNodes({ nodes = testNodes, edges = testEdges, onNodeClick, onNodeDo
       
       {/* Render nodes with stagger */}
       {nodes.map((node, index) => (
-        <ThoughtNode3D
+        <ThoughtNode2D
           key={node.id}
           node={node}
           onClick={handleNodeClick}
@@ -119,21 +118,12 @@ function TestNodes({ nodes = testNodes, edges = testEdges, onNodeClick, onNodeDo
 
 function App() {
   const [showScene, setShowScene] = useState(false)
-  const [enableBloom, setEnableBloom] = useState(true)
-  const [enableAutoRotation, setEnableAutoRotation] = useState(true)
   const [nodeCount, setNodeCount] = useState(0)
   const [useWebSocketMode, setUseWebSocketMode] = useState(false)
   const [sessionId, setSessionId] = useState('')
   const [selectedNode, setSelectedNode] = useState(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [showStats, setShowStats] = useState(false)
-  const [showPerformanceStats, setShowPerformanceStats] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [autoOptimizationEnabled, setAutoOptimizationEnabled] = useState(true)
-  const cameraControlsRef = useRef(null)
-  
-  // Device performance detection
-  const devicePerformance = useDevicePerformance()
+  const sceneControlsRef = useRef(null)
   
   // Zustand store
   const {
@@ -153,8 +143,9 @@ function App() {
   const { isConnected, connectionError } = useWebSocket({
     sessionId: useWebSocketMode ? sessionId : null,
     onNewThought: (thought) => {
-      console.log('New thought received:', thought)
+      console.log('Adding node to store:', thought?.id)
       addNode(thought)
+      console.log('Total nodes in store:', storeNodes.length + 1)
     },
     onThinkingComplete: (data) => {
       console.log('Thinking complete:', data)
@@ -169,11 +160,8 @@ function App() {
     }
   })
   
-  // Auto-focus on newest node (for first 10 nodes only)
+  // Get nodes to display
   const nodesToUse = useWebSocketMode ? storeNodes : testNodes.slice(0, nodeCount)
-  const autoFocusNode = nodesToUse.length > 0 && nodesToUse.length <= 10 && nodesToUse[nodesToUse.length - 1]
-    ? nodesToUse[nodesToUse.length - 1].position
-    : null
   
   // Simulate nodes appearing over time (for demo mode only)
   useEffect(() => {
@@ -206,11 +194,11 @@ function App() {
     }
   }
   
-  // Handle node double-click - focus camera
+  // Handle node double-click - focus view
   const handleNodeDoubleClick = (node) => {
-    if (node && cameraControlsRef.current?.focusOnNode) {
-      console.log('Node double-clicked, focusing camera:', node.id)
-      cameraControlsRef.current.focusOnNode(node.position, 1500, 15)
+    if (node && sceneControlsRef.current?.focusOnNode) {
+      console.log('Node double-clicked, focusing view:', node.id)
+      sceneControlsRef.current.focusOnNode(node.position)
     }
   }
   
@@ -219,74 +207,16 @@ function App() {
     // console.log('Node hover:', node.id, isHovering)
   }
   
-  // Toggle auto-rotation
-  const handleToggleAutoRotation = () => {
-    setEnableAutoRotation(prev => !prev)
+  // Scene ready handler
+  const handleSceneReady = (controls) => {
+    sceneControlsRef.current = controls
   }
-  
-  // Toggle fullscreen
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error('Error attempting to enable fullscreen:', err)
-      })
-      setIsFullscreen(true)
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-        setIsFullscreen(false)
-      }
-    }
-  }
-  
-  // Track fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
-    }
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [])
-  
-  // Camera ready handler
-  const handleCameraReady = (controls) => {
-    cameraControlsRef.current = controls
-  }
-  
-  // Handle FPS drop - automatically optimize settings
-  const handleFPSDrop = (fps) => {
-    if (!autoOptimizationEnabled) return
-    
-    console.warn(`FPS dropped to ${fps}, applying optimizations...`)
-    
-    // Disable bloom first (biggest performance impact)
-    if (enableBloom) {
-      setEnableBloom(false)
-      console.log('✓ Bloom disabled for better performance')
-    }
-    
-    // Could add more optimizations here if needed
-    // - Reduce node geometry quality
-    // - Disable auto-rotation
-    // - Reduce light count
-  }
-  
-  // Auto-adjust bloom based on device performance on initial load
-  useEffect(() => {
-    if (showScene && devicePerformance === 'low') {
-      setEnableBloom(false)
-      console.log('Low-end device detected, bloom disabled by default')
-    } else if (showScene && devicePerformance === 'medium') {
-      console.log('Medium-tier device detected, monitoring performance...')
-    }
-  }, [showScene, devicePerformance])
   
   // Loading state management
   useEffect(() => {
     if (showScene) {
       setIsLoading(true)
-      const timer = setTimeout(() => setIsLoading(false), 1500)
+      const timer = setTimeout(() => setIsLoading(false), 800)
       return () => clearTimeout(timer)
     }
   }, [showScene])
@@ -319,18 +249,13 @@ function App() {
               animation: 'spin 1s linear infinite'
             }} />
             <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>
-              Loading 3D Scene...
+              Loading Visualization...
             </p>
           </div>
         )}
         
-        <ThinkingScene 
-          enableBloom={enableBloom}
-          enableAutoRotation={enableAutoRotation}
-          autoFocusNode={autoFocusNode}
-          onCameraReady={handleCameraReady}
-          onToggleAutoRotation={handleToggleAutoRotation}
-          onToggleFullscreen={handleToggleFullscreen}
+        <ThinkingScene2D 
+          onReady={handleSceneReady}
         >
           <TestNodes 
             nodes={nodesToUse} 
@@ -339,18 +264,7 @@ function App() {
             onNodeDoubleClick={handleNodeDoubleClick}
             onNodeHover={handleNodeHover}
           />
-          
-          {/* Performance Monitor - always monitors for auto-optimization */}
-          <PerformanceMonitor
-            show={true}
-            onFPSDrop={handleFPSDrop}
-            fpsThreshold={30}
-            checkInterval={60}
-          />
-          
-          {/* Stats Panel - only show when user enables it */}
-          {showStats && <Stats showPanel={0} className="stats-panel" />}
-        </ThinkingScene>
+        </ThinkingScene2D>
         
         {/* Node Detail Panel */}
         {selectedNode && (
@@ -360,9 +274,6 @@ function App() {
             position="right"
           />
         )}
-        
-        {/* Performance Stats Overlay */}
-        {showPerformanceStats && <PerformanceStats show={showPerformanceStats} />}
         
         {/* Info overlay */}
         <div style={{
@@ -390,51 +301,16 @@ function App() {
                 </>
               ) : (
                 <>
-                  <p>✅ Auto-focus: ({Math.min(nodeCount, 10)}/10)</p>
                   <p>✅ Nodes: {nodeCount}/{testNodes.length}</p>
                 </>
               )}
-              <p>🔄 Auto-rotation: {enableAutoRotation ? 'On' : 'Off'}</p>
-              <p>✨ Bloom: {enableBloom ? 'Active' : 'Off'}</p>
-              <p>📊 Device: {devicePerformance.toUpperCase()}</p>
-              <p>🎯 FPS Stats: {showStats ? 'On' : 'Off'}</p>
               
-              <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
-                <strong>Keyboard Shortcuts:</strong>
-                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>R</code> - Reset camera</p>
-                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>Space</code> - Toggle rotation</p>
-                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>F</code> - Fullscreen</p>
-                <p style={{ margin: '4px 0' }}>🖱️ Drag - Rotate view</p>
+              <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)' }}>
+                <strong>Controls:</strong>
+                <p style={{ margin: '4px 0' }}>🖱️ Drag - Pan view</p>
                 <p style={{ margin: '4px 0' }}>🔍 Scroll - Zoom in/out</p>
                 <p style={{ margin: '4px 0' }}>🖱️ Click node - Show details</p>
-                <p style={{ margin: '4px 0' }}>🖱️ Double-click - Focus camera</p>
-              </div>
-              
-              <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button 
-                  onClick={() => setEnableBloom(!enableBloom)}
-                  style={{ flex: '1 1 calc(50% - 4px)' }}
-                >
-                  {enableBloom ? '✨ Bloom' : '💡 Bloom'}
-                </button>
-                <button 
-                  onClick={() => setEnableAutoRotation(!enableAutoRotation)}
-                  style={{ flex: '1 1 calc(50% - 4px)' }}
-                >
-                  {enableAutoRotation ? '🔄 Rotate' : '⏸️ Rotate'}
-                </button>
-                <button 
-                  onClick={() => setShowStats(!showStats)}
-                  style={{ flex: '1 1 calc(50% - 4px)' }}
-                >
-                  {showStats ? '📊 FPS' : '📈 FPS'}
-                </button>
-                <button 
-                  onClick={() => setShowPerformanceStats(!showPerformanceStats)}
-                  style={{ flex: '1 1 calc(50% - 4px)' }}
-                >
-                  {showPerformanceStats ? '💻 Info' : '💻 Info'}
-                </button>
+                <p style={{ margin: '4px 0' }}>🖱️ Double-click - Focus on node</p>
               </div>
               
               <div style={{ marginTop: '10px', fontSize: '0.85rem' }}>
@@ -485,7 +361,7 @@ function App() {
       minHeight: '100vh'
     }}>
       <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
-        🧠 Stepper - 3D Thinking Visualization
+        🧠 Stepper - Thinking Visualization
       </h1>
       
       <div className="panel" style={{ maxWidth: '800px' }}>
@@ -499,13 +375,12 @@ function App() {
       </div>
 
       <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 2.0 Complete - Three.js Scene Foundation</div>
+        <div className="panel-title">✅ Task 2.0 Complete - 2D Scene Foundation</div>
         <div className="panel-content">
-          <p>✅ ThinkingScene component created</p>
-          <p>✅ Camera configured (FOV 75, position [0, 10, 30])</p>
-          <p>✅ Ambient light (#1a1a2e, intensity 0.3)</p>
-          <p>✅ 3 Point lights positioned</p>
-          <p>✅ OrbitControls with damping enabled</p>
+          <p>✅ ThinkingScene2D component created</p>
+          <p>✅ SVG-based rendering</p>
+          <p>✅ Pan and zoom controls</p>
+          <p>✅ Minimal, clean aesthetic</p>
         </div>
       </div>
 
@@ -513,10 +388,10 @@ function App() {
         <div className="panel-title">✅ Task 3.0 Complete - Node & Edge Rendering</div>
         <div className="panel-content">
           <p>✅ nodeColors.js with all ThoughtType colors</p>
-          <p>✅ ThoughtNode3D with SphereGeometry</p>
-          <p>✅ Emissive materials with type-based colors</p>
-          <p>✅ Confidence-based scaling (0.7-1.3 range)</p>
-          <p>✅ ThoughtEdge3D with Line rendering</p>
+          <p>✅ ThoughtNode2D with sharp rectangular design</p>
+          <p>✅ Solid colors, no gradients or bloom</p>
+          <p>✅ Confidence-based opacity</p>
+          <p>✅ ThoughtEdge2D with simple line rendering</p>
           <p>✅ Edge coloring by relationship type</p>
           <p>✅ Strength-based line width (1-3px)</p>
         </div>
@@ -528,9 +403,8 @@ function App() {
           <p>✅ calculateHierarchicalLayout function</p>
           <p>✅ Depth calculation via graph traversal</p>
           <p>✅ Breadth indexing for siblings</p>
-          <p>✅ Y position: -depth × 5 units</p>
-          <p>✅ X position: centered with 3-unit spacing</p>
-          <p>✅ Z position: random -2 to +2 variation</p>
+          <p>✅ Y position: depth × 120 pixels</p>
+          <p>✅ X position: centered with 180px spacing</p>
           <p>✅ updateNodePositions helper function</p>
         </div>
       </div>
@@ -538,39 +412,24 @@ function App() {
       <div className="panel" style={{ maxWidth: '800px' }}>
         <div className="panel-title">✅ Task 5.0 Complete - Animation System</div>
         <div className="panel-content">
-          <p>✅ animations.js with anime.js helpers</p>
-          <p>✅ Node appearance: elastic bounce (800ms)</p>
-          <p>✅ Node pulse: oscillating emissive (2000ms)</p>
-          <p>✅ Edge drawing: fade-in effect (500ms)</p>
+          <p>✅ animations2d.js with anime.js helpers</p>
+          <p>✅ Node appearance: simple fade-in (400ms)</p>
+          <p>✅ Node pulse: subtle scale animation</p>
+          <p>✅ Edge drawing: fade-in effect (300ms)</p>
           <p>✅ Stagger delay: 100ms between nodes</p>
           <p>✅ Newest node marked as pulsing</p>
-          <p>✅ Hover animation: smooth scale to 1.3x</p>
+          <p>✅ Hover animation: smooth scale to 1.05x</p>
         </div>
       </div>
 
       <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 6.0 Complete - Bloom Post-Processing</div>
+        <div className="panel-title">✅ Task 6.0 Complete - View Controls</div>
         <div className="panel-content">
-          <p>✅ EffectComposer integrated</p>
-          <p>✅ Bloom effect: intensity 1.5</p>
-          <p>✅ Luminance threshold: 0.1</p>
-          <p>✅ Luminance smoothing: 0.9</p>
-          <p>✅ Bloom radius: 0.4</p>
-          <p>✅ Affects emissive materials (nodes)</p>
-          <p>✅ Toggleable for performance</p>
-        </div>
-      </div>
-
-      <div className="panel" style={{ maxWidth: '800px' }}>
-        <div className="panel-title">✅ Task 7.0 Complete - Camera Controls & Auto-Focus</div>
-        <div className="panel-content">
-          <p>✅ OrbitControls with damping (0.05)</p>
-          <p>✅ Distance limits: 10-100 units</p>
-          <p>✅ useCameraAnimation hook created</p>
-          <p>✅ focusOnNode function (45° angle, 1500ms)</p>
-          <p>✅ Auto-focus on first 10 nodes</p>
-          <p>✅ Auto-rotation when idle (5 seconds, 0.1 rad/sec)</p>
-          <p>✅ Keyboard shortcut 'R' to reset camera</p>
+          <p>✅ Pan controls with mouse drag</p>
+          <p>✅ Zoom controls with mouse wheel</p>
+          <p>✅ Zoom buttons (+/-/reset)</p>
+          <p>✅ Focus on node with double-click</p>
+          <p>✅ Clean, minimal interface</p>
         </div>
       </div>
 
@@ -584,6 +443,18 @@ function App() {
           <p>✅ Edge building from dependencies</p>
           <p>✅ Reactive rendering from store</p>
           <p>✅ Auto-reconnect with max attempts</p>
+
+          <ProblemSubmitForm
+            onSessionCreated={(sessionId) => {
+              console.log('Session created:', sessionId)
+              setSessionId(sessionId)
+              setUseWebSocketMode(true)
+              // Small delay to ensure state is set
+              setTimeout(() => {
+                setShowScene(true)
+              }, 100)
+            }}
+          />
           
           <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(78, 205, 196, 0.1)', borderRadius: '4px', border: '1px solid rgba(78, 205, 196, 0.3)' }}>
             <strong style={{ display: 'block', marginBottom: '8px' }}>WebSocket Mode:</strong>
@@ -616,7 +487,7 @@ function App() {
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
           >
-            🚀 Launch 3D Visualization →
+            🚀 Launch Visualization →
           </button>
         </div>
       </div>
@@ -633,10 +504,6 @@ function App() {
         <div className="panel-title">Installed Dependencies</div>
         <div className="panel-content">
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li>📦 three@^0.160.0</li>
-            <li>📦 @react-three/fiber@^8.18.0</li>
-            <li>📦 @react-three/drei@^9.122.0</li>
-            <li>📦 @react-three/postprocessing@^2.19.1</li>
             <li>📦 animejs@^3.2.2</li>
             <li>📦 zustand@^4.5.7</li>
           </ul>
