@@ -500,7 +500,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Research
+          Docs
           <span className="inline-block">↗</span>
         </a>
 
