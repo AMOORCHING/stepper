@@ -3,6 +3,8 @@ import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
 import { updateNodePositions } from './utils/layoutAlgorithm'
+import { useThinkingStore } from './store/thinkingStore'
+import { useWebSocket } from './hooks/useWebSocket'
 
 // Test data: multiple nodes with different types (without manual positions)
 const testNodesRaw = [
@@ -50,7 +52,7 @@ const testEdges = [
 // Calculate positions using the layout algorithm
 const testNodes = updateNodePositions(testNodesRaw, testEdges)
 
-function TestNodes({ nodes = testNodes }) {
+function TestNodes({ nodes = testNodes, edges = testEdges }) {
   const [selectedNode, setSelectedNode] = useState(null)
   
   const handleNodeClick = (node) => {
@@ -71,7 +73,7 @@ function TestNodes({ nodes = testNodes }) {
   return (
     <>
       {/* Render edges first (so they appear behind nodes) */}
-      {testEdges.map((edge, index) => {
+      {edges.map((edge, index) => {
         const fromNode = nodes.find(n => n.id === edge.from)
         const toNode = nodes.find(n => n.id === edge.to)
         
@@ -115,15 +117,52 @@ function App() {
   const [enableBloom, setEnableBloom] = useState(true)
   const [enableAutoRotation, setEnableAutoRotation] = useState(true)
   const [nodeCount, setNodeCount] = useState(0)
+  const [useWebSocketMode, setUseWebSocketMode] = useState(false)
+  const [sessionId, setSessionId] = useState('')
+  
+  // Zustand store
+  const {
+    nodes: storeNodes,
+    edges: storeEdges,
+    isThinking,
+    isComplete,
+    error,
+    addNode,
+    setComplete,
+    setError,
+    clearError,
+    reset: resetStore
+  } = useThinkingStore()
+  
+  // WebSocket integration
+  const { isConnected, connectionError } = useWebSocket({
+    sessionId: useWebSocketMode ? sessionId : null,
+    onNewThought: (thought) => {
+      console.log('New thought received:', thought)
+      addNode(thought)
+    },
+    onThinkingComplete: (data) => {
+      console.log('Thinking complete:', data)
+      setComplete(true)
+    },
+    onSolutionReady: (solution) => {
+      console.log('Solution ready:', solution)
+    },
+    onError: (err) => {
+      console.error('WebSocket error:', err)
+      setError(err)
+    }
+  })
   
   // Auto-focus on newest node (for first 10 nodes only)
-  const autoFocusNode = nodeCount < 10 && nodeCount > 0 && testNodes[nodeCount - 1]
-    ? testNodes[nodeCount - 1].position
+  const nodesToUse = useWebSocketMode ? storeNodes : testNodes.slice(0, nodeCount)
+  const autoFocusNode = nodesToUse.length < 10 && nodesToUse.length > 0 && nodesToUse[nodesToUse.length - 1]
+    ? nodesToUse[nodesToUse.length - 1].position
     : null
   
-  // Simulate nodes appearing over time (for demo)
+  // Simulate nodes appearing over time (for demo mode only)
   useEffect(() => {
-    if (!showScene) {
+    if (useWebSocketMode || !showScene) {
       setNodeCount(0)
       return
     }
@@ -135,12 +174,16 @@ function App() {
     }, nodeCount === 0 ? 800 : 900) // First node after 800ms, then 900ms between nodes
     
     return () => clearTimeout(timer)
-  }, [showScene, nodeCount])
+  }, [showScene, nodeCount, useWebSocketMode])
+  
+  // Reset store when switching modes
+  useEffect(() => {
+    if (useWebSocketMode) {
+      resetStore()
+    }
+  }, [useWebSocketMode, resetStore])
 
   if (showScene) {
-    // Only show nodes that have "appeared" (for demo purposes)
-    const visibleNodes = testNodes.slice(0, nodeCount)
-    
     return (
       <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
         <ThinkingScene 
@@ -148,7 +191,7 @@ function App() {
           enableAutoRotation={enableAutoRotation}
           autoFocusNode={autoFocusNode}
         >
-          <TestNodes nodes={visibleNodes} />
+          <TestNodes nodes={nodesToUse} edges={useWebSocketMode ? storeEdges : testEdges} />
         </ThinkingScene>
         
         {/* Info overlay */}
@@ -160,12 +203,29 @@ function App() {
           maxWidth: '350px'
         }}>
           <div className="panel">
-            <div className="panel-title">3D Visualization Active</div>
+            <div className="panel-title">
+              {useWebSocketMode ? '🔗 WebSocket Mode' : '🎬 Demo Mode'}
+            </div>
             <div className="panel-content">
-              <p>✅ Auto-focus on nodes ({Math.min(nodeCount, 10)}/10)</p>
-              <p>✅ Auto-rotation: {enableAutoRotation ? 'On (after 5s idle)' : 'Off'}</p>
-              <p>✅ Bloom effect: {enableBloom ? 'Active' : 'Disabled'}</p>
-              <p>✅ Nodes visible: {nodeCount}/{testNodes.length}</p>
+              {useWebSocketMode ? (
+                <>
+                  <p>
+                    {isConnected ? '✅ Connected' : connectionError ? '❌ Error' : '⏳ Connecting...'}
+                  </p>
+                  <p>📡 Session: {sessionId || 'None'}</p>
+                  <p>🧠 Thinking: {isThinking ? 'Yes' : 'No'}</p>
+                  {isComplete && <p>✨ Complete!</p>}
+                  {error && <p style={{ color: '#FF6B6B' }}>❌ {error}</p>}
+                  <p>📊 Nodes: {storeNodes.length}</p>
+                </>
+              ) : (
+                <>
+                  <p>✅ Auto-focus: ({Math.min(nodeCount, 10)}/10)</p>
+                  <p>✅ Nodes: {nodeCount}/{testNodes.length}</p>
+                </>
+              )}
+              <p>🔄 Auto-rotation: {enableAutoRotation ? 'On' : 'Off'}</p>
+              <p>✨ Bloom: {enableBloom ? 'Active' : 'Off'}</p>
               
               <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
                 <strong>Keyboard Shortcuts:</strong>
@@ -307,6 +367,47 @@ function App() {
           <p>✅ Auto-focus on first 10 nodes</p>
           <p>✅ Auto-rotation when idle (5 seconds, 0.1 rad/sec)</p>
           <p>✅ Keyboard shortcut 'R' to reset camera</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 8.0 Complete - WebSocket Integration</div>
+        <div className="panel-content">
+          <p>✅ useWebSocket hook created</p>
+          <p>✅ Event handlers: new_thought, thinking_complete, solution_ready, error</p>
+          <p>✅ Zustand store for state management</p>
+          <p>✅ Auto-layout calculation on new nodes</p>
+          <p>✅ Edge building from dependencies</p>
+          <p>✅ Reactive rendering from store</p>
+          <p>✅ Auto-reconnect with max attempts</p>
+          
+          <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(78, 205, 196, 0.1)', borderRadius: '4px', border: '1px solid rgba(78, 205, 196, 0.3)' }}>
+            <strong style={{ display: 'block', marginBottom: '8px' }}>WebSocket Mode:</strong>
+            <input
+              type="text"
+              placeholder="Enter session ID"
+              value={sessionId}
+              onChange={(e) => setSessionId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                marginBottom: '8px',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)'
+              }}
+            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={useWebSocketMode}
+                onChange={(e) => setUseWebSocketMode(e.target.checked)}
+              />
+              <span>Enable WebSocket Mode</span>
+            </label>
+          </div>
+          
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
