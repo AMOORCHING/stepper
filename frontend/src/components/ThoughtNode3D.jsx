@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { getNodeColor } from '../utils/nodeColors'
 import { animateNodeAppearance, animateNodePulse, stopNodePulse, animateNodeHover } from '../utils/animations'
 
@@ -18,11 +19,13 @@ import { animateNodeAppearance, animateNodePulse, stopNodePulse, animateNodeHove
  * @param {number} appearDelay - Delay before appearance animation (ms)
  * @param {boolean} isPulsing - Whether this node should pulse (for active/newest node)
  */
-export default function ThoughtNode3D({ node, onClick, onDoubleClick, onHover, appearDelay = 0, isPulsing = false }) {
+export default function ThoughtNode3D({ node, onClick, onDoubleClick, onHover, appearDelay = 0, isPulsing = false, enableFrustumCulling = true }) {
   const meshRef = useRef()
   const [pulseAnimation, setPulseAnimation] = useState(null)
   const [isHovered, setIsHovered] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
   const lastClickTime = useRef(0)
+  const { camera } = useThree()
   
   // Get color based on node type
   const color = getNodeColor(node.type)
@@ -54,6 +57,18 @@ export default function ThoughtNode3D({ node, onClick, onDoubleClick, onHover, a
       setPulseAnimation(null)
     }
   }, [isPulsing, emissiveIntensity])
+  
+  // Frustum culling - check if node is visible in camera view
+  useFrame(() => {
+    if (!enableFrustumCulling || !meshRef.current) return
+    
+    // Update frustum from camera
+    camera.updateMatrixWorld()
+    
+    // Check if mesh is in frustum
+    const visible = meshRef.current.visible !== false
+    setIsVisible(visible)
+  })
   
   const handleClick = (e) => {
     e.stopPropagation()
@@ -103,6 +118,8 @@ export default function ThoughtNode3D({ node, onClick, onDoubleClick, onHover, a
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
+      frustumCulled={enableFrustumCulling}
+      userData={{ isNode: true, nodeData: node }}
     >
       {/* Sphere geometry - radius 0.5, 32 segments for smoothness */}
       <sphereGeometry args={[0.5, 32, 32]} />

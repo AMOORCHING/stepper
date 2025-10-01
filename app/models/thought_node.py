@@ -14,9 +14,10 @@ class ThoughtType(Enum):
 
 
 class Position(BaseModel):
-    """2D position for graph visualization."""
+    """3D position for graph visualization."""
     x: float
     y: float
+    z: float = 0.0  # Default to 0 for backward compatibility
 
 
 class ThoughtNode(BaseModel):
@@ -42,7 +43,7 @@ class ThoughtNode(BaseModel):
                 "confidence": 0.85,
                 "keywords": ["requirements", "problem", "understand"],
                 "dependencies": [],
-                "position": {"x": 0, "y": 0},
+                "position": {"x": 0, "y": 0, "z": 0},
                 "timestamp": "2024-01-01T00:00:00Z",
                 "session_id": "session_xyz"
             }

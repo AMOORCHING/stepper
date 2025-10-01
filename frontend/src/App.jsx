@@ -3,6 +3,7 @@ import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
 import NodeDetailPanel from './components/NodeDetailPanel'
+import PerformanceMonitor, { useDevicePerformance, PerformanceStats } from './components/PerformanceMonitor'
 import { updateNodePositions } from './utils/layoutAlgorithm'
 import { useThinkingStore } from './store/thinkingStore'
 import { useWebSocket } from './hooks/useWebSocket'
@@ -124,7 +125,14 @@ function App() {
   const [sessionId, setSessionId] = useState('')
   const [selectedNode, setSelectedNode] = useState(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showStats, setShowStats] = useState(false)
+  const [showPerformanceStats, setShowPerformanceStats] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [autoOptimizationEnabled, setAutoOptimizationEnabled] = useState(true)
   const cameraControlsRef = useRef(null)
+  
+  // Device performance detection
+  const devicePerformance = useDevicePerformance()
   
   // Zustand store
   const {
@@ -244,10 +252,77 @@ function App() {
   const handleCameraReady = (controls) => {
     cameraControlsRef.current = controls
   }
+  
+  // Handle FPS drop - automatically optimize settings
+  const handleFPSDrop = (fps) => {
+    if (!autoOptimizationEnabled) return
+    
+    console.warn(`FPS dropped to ${fps}, applying optimizations...`)
+    
+    // Disable bloom first (biggest performance impact)
+    if (enableBloom) {
+      setEnableBloom(false)
+      console.log('✓ Bloom disabled for better performance')
+    }
+    
+    // Could add more optimizations here if needed
+    // - Reduce node geometry quality
+    // - Disable auto-rotation
+    // - Reduce light count
+  }
+  
+  // Auto-adjust bloom based on device performance on initial load
+  useEffect(() => {
+    if (showScene && devicePerformance === 'low') {
+      setEnableBloom(false)
+      console.log('Low-end device detected, bloom disabled by default')
+    } else if (showScene && devicePerformance === 'medium') {
+      console.log('Medium-tier device detected, monitoring performance...')
+    }
+  }, [showScene, devicePerformance])
+  
+  // Loading state management
+  useEffect(() => {
+    if (showScene) {
+      setIsLoading(true)
+      const timer = setTimeout(() => setIsLoading(false), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [showScene])
 
   if (showScene) {
     return (
       <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--bg-primary)',
+            zIndex: 10000,
+            animation: 'fadeOut 0.5s ease-out 1s forwards'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              border: '4px solid rgba(78, 205, 196, 0.2)',
+              borderTop: '4px solid #4ECDC4',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>
+              Loading 3D Scene...
+            </p>
+          </div>
+        )}
+        
         <ThinkingScene 
           enableBloom={enableBloom}
           enableAutoRotation={enableAutoRotation}
@@ -263,6 +338,16 @@ function App() {
             onNodeDoubleClick={handleNodeDoubleClick}
             onNodeHover={handleNodeHover}
           />
+          
+          {/* Performance Monitor */}
+          {showStats && (
+            <PerformanceMonitor
+              show={showStats}
+              onFPSDrop={handleFPSDrop}
+              fpsThreshold={30}
+              checkInterval={60}
+            />
+          )}
         </ThinkingScene>
         
         {/* Node Detail Panel */}
@@ -273,6 +358,9 @@ function App() {
             position="right"
           />
         )}
+        
+        {/* Performance Stats Overlay */}
+        {showPerformanceStats && <PerformanceStats show={showPerformanceStats} />}
         
         {/* Info overlay */}
         <div style={{
@@ -306,6 +394,8 @@ function App() {
               )}
               <p>🔄 Auto-rotation: {enableAutoRotation ? 'On' : 'Off'}</p>
               <p>✨ Bloom: {enableBloom ? 'Active' : 'Off'}</p>
+              <p>📊 Device: {devicePerformance.toUpperCase()}</p>
+              <p>🎯 FPS Stats: {showStats ? 'On' : 'Off'}</p>
               
               <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
                 <strong>Keyboard Shortcuts:</strong>
@@ -318,18 +408,30 @@ function App() {
                 <p style={{ margin: '4px 0' }}>🖱️ Double-click - Focus camera</p>
               </div>
               
-              <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+              <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => setEnableBloom(!enableBloom)}
-                  style={{ flex: 1 }}
+                  style={{ flex: '1 1 calc(50% - 4px)' }}
                 >
                   {enableBloom ? '✨ Bloom' : '💡 Bloom'}
                 </button>
                 <button 
                   onClick={() => setEnableAutoRotation(!enableAutoRotation)}
-                  style={{ flex: 1 }}
+                  style={{ flex: '1 1 calc(50% - 4px)' }}
                 >
                   {enableAutoRotation ? '🔄 Rotate' : '⏸️ Rotate'}
+                </button>
+                <button 
+                  onClick={() => setShowStats(!showStats)}
+                  style={{ flex: '1 1 calc(50% - 4px)' }}
+                >
+                  {showStats ? '📊 FPS' : '📈 FPS'}
+                </button>
+                <button 
+                  onClick={() => setShowPerformanceStats(!showPerformanceStats)}
+                  style={{ flex: '1 1 calc(50% - 4px)' }}
+                >
+                  {showPerformanceStats ? '💻 Info' : '💻 Info'}
                 </button>
               </div>
               
@@ -352,6 +454,22 @@ function App() {
             </div>
           </div>
         </div>
+        
+        {/* Loading and animation styles */}
+        <style>
+          {`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            
+            @keyframes fadeOut {
+              0% { opacity: 1; visibility: visible; }
+              99% { opacity: 0; visibility: visible; }
+              100% { opacity: 0; visibility: hidden; }
+            }
+          `}
+        </style>
       </div>
     )
   }
