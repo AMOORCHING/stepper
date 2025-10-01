@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
@@ -50,7 +50,7 @@ const testEdges = [
 // Calculate positions using the layout algorithm
 const testNodes = updateNodePositions(testNodesRaw, testEdges)
 
-function TestNodes() {
+function TestNodes({ nodes = testNodes }) {
   const [selectedNode, setSelectedNode] = useState(null)
   
   const handleNodeClick = (node) => {
@@ -66,18 +66,21 @@ function TestNodes() {
   const STAGGER_DELAY = 100
   
   // Mark the last node as pulsing (most recently added)
-  const newestNodeId = testNodes[testNodes.length - 1]?.id
-  
+  const newestNodeId = nodes[nodes.length - 1]?.id
+
   return (
     <>
       {/* Render edges first (so they appear behind nodes) */}
       {testEdges.map((edge, index) => {
-        const fromNode = testNodes.find(n => n.id === edge.from)
-        const toNode = testNodes.find(n => n.id === edge.to)
+        const fromNode = nodes.find(n => n.id === edge.from)
+        const toNode = nodes.find(n => n.id === edge.to)
+        
+        // Only render edge if both nodes are visible
+        if (!fromNode || !toNode) return null
         
         // Calculate delay: edges appear after their connected nodes
-        const fromIndex = testNodes.findIndex(n => n.id === edge.from)
-        const toIndex = testNodes.findIndex(n => n.id === edge.to)
+        const fromIndex = nodes.findIndex(n => n.id === edge.from)
+        const toIndex = nodes.findIndex(n => n.id === edge.to)
         const maxIndex = Math.max(fromIndex, toIndex)
         const edgeDelay = (maxIndex + 1) * STAGGER_DELAY + 400 // Extra 400ms after node appears
         
@@ -93,7 +96,7 @@ function TestNodes() {
       })}
       
       {/* Render nodes with stagger */}
-      {testNodes.map((node, index) => (
+      {nodes.map((node, index) => (
         <ThoughtNode3D
           key={node.id}
           node={node}
@@ -110,12 +113,42 @@ function TestNodes() {
 function App() {
   const [showScene, setShowScene] = useState(false)
   const [enableBloom, setEnableBloom] = useState(true)
+  const [enableAutoRotation, setEnableAutoRotation] = useState(true)
+  const [nodeCount, setNodeCount] = useState(0)
+  
+  // Auto-focus on newest node (for first 10 nodes only)
+  const autoFocusNode = nodeCount < 10 && nodeCount > 0 && testNodes[nodeCount - 1]
+    ? testNodes[nodeCount - 1].position
+    : null
+  
+  // Simulate nodes appearing over time (for demo)
+  useEffect(() => {
+    if (!showScene) {
+      setNodeCount(0)
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      if (nodeCount < testNodes.length) {
+        setNodeCount(prev => prev + 1)
+      }
+    }, nodeCount === 0 ? 800 : 900) // First node after 800ms, then 900ms between nodes
+    
+    return () => clearTimeout(timer)
+  }, [showScene, nodeCount])
 
   if (showScene) {
+    // Only show nodes that have "appeared" (for demo purposes)
+    const visibleNodes = testNodes.slice(0, nodeCount)
+    
     return (
       <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-        <ThinkingScene enableBloom={enableBloom}>
-          <TestNodes />
+        <ThinkingScene 
+          enableBloom={enableBloom}
+          enableAutoRotation={enableAutoRotation}
+          autoFocusNode={autoFocusNode}
+        >
+          <TestNodes nodes={visibleNodes} />
         </ThinkingScene>
         
         {/* Info overlay */}
@@ -129,20 +162,30 @@ function App() {
           <div className="panel">
             <div className="panel-title">3D Visualization Active</div>
             <div className="panel-content">
-              <p>✅ Hierarchical layout algorithm</p>
-              <p>✅ Staggered node appearance (100ms)</p>
-              <p>✅ Elastic bounce animation (800ms)</p>
-              <p>✅ Newest node pulsing effect</p>
-              <p>✅ Smooth hover scaling (1.3x)</p>
-              <p>✅ Edge fade-in animations (500ms)</p>
-              <p>✅ {enableBloom ? 'Bloom effect active' : 'Bloom disabled'}</p>
+              <p>✅ Auto-focus on nodes ({Math.min(nodeCount, 10)}/10)</p>
+              <p>✅ Auto-rotation: {enableAutoRotation ? 'On (after 5s idle)' : 'Off'}</p>
+              <p>✅ Bloom effect: {enableBloom ? 'Active' : 'Disabled'}</p>
+              <p>✅ Nodes visible: {nodeCount}/{testNodes.length}</p>
               
-              <div style={{ marginTop: '10px' }}>
+              <div style={{ marginTop: '10px', fontSize: '0.85rem', padding: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                <strong>Keyboard Shortcuts:</strong>
+                <p style={{ margin: '4px 0' }}>⌨️ <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 4px', borderRadius: '2px' }}>R</code> - Reset camera</p>
+                <p style={{ margin: '4px 0' }}>🖱️ Drag - Rotate view</p>
+                <p style={{ margin: '4px 0' }}>🔍 Scroll - Zoom in/out</p>
+              </div>
+              
+              <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
                 <button 
                   onClick={() => setEnableBloom(!enableBloom)}
-                  style={{ width: '100%' }}
+                  style={{ flex: 1 }}
                 >
-                  {enableBloom ? '✨ Disable Bloom' : '💡 Enable Bloom'}
+                  {enableBloom ? '✨ Bloom' : '💡 Bloom'}
+                </button>
+                <button 
+                  onClick={() => setEnableAutoRotation(!enableAutoRotation)}
+                  style={{ flex: 1 }}
+                >
+                  {enableAutoRotation ? '🔄 Rotate' : '⏸️ Rotate'}
                 </button>
               </div>
               
@@ -251,6 +294,19 @@ function App() {
           <p>✅ Bloom radius: 0.4</p>
           <p>✅ Affects emissive materials (nodes)</p>
           <p>✅ Toggleable for performance</p>
+        </div>
+      </div>
+
+      <div className="panel" style={{ maxWidth: '800px' }}>
+        <div className="panel-title">✅ Task 7.0 Complete - Camera Controls & Auto-Focus</div>
+        <div className="panel-content">
+          <p>✅ OrbitControls with damping (0.05)</p>
+          <p>✅ Distance limits: 10-100 units</p>
+          <p>✅ useCameraAnimation hook created</p>
+          <p>✅ focusOnNode function (45° angle, 1500ms)</p>
+          <p>✅ Auto-focus on first 10 nodes</p>
+          <p>✅ Auto-rotation when idle (5 seconds, 0.1 rad/sec)</p>
+          <p>✅ Keyboard shortcut 'R' to reset camera</p>
           <button 
             onClick={() => setShowScene(true)}
             style={{ marginTop: '10px', width: '100%' }}
