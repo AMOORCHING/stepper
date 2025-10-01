@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/stepper/:path*",
+      "destination": "/stepper/:path*"
+    },
+    {
+      "source": "/stepper",
+      "destination": "/stepper/index.html"
+    }
+  ]
+}
+
