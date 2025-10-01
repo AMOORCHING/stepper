@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Stats } from '@react-three/drei'
 import ThinkingScene from './components/ThinkingScene'
 import ThoughtNode3D from './components/ThoughtNode3D'
 import ThoughtEdge3D from './components/ThoughtEdge3D'
@@ -170,7 +171,7 @@ function App() {
   
   // Auto-focus on newest node (for first 10 nodes only)
   const nodesToUse = useWebSocketMode ? storeNodes : testNodes.slice(0, nodeCount)
-  const autoFocusNode = nodesToUse.length < 10 && nodesToUse.length > 0 && nodesToUse[nodesToUse.length - 1]
+  const autoFocusNode = nodesToUse.length > 0 && nodesToUse.length <= 10 && nodesToUse[nodesToUse.length - 1]
     ? nodesToUse[nodesToUse.length - 1].position
     : null
   
@@ -339,15 +340,16 @@ function App() {
             onNodeHover={handleNodeHover}
           />
           
-          {/* Performance Monitor */}
-          {showStats && (
-            <PerformanceMonitor
-              show={showStats}
-              onFPSDrop={handleFPSDrop}
-              fpsThreshold={30}
-              checkInterval={60}
-            />
-          )}
+          {/* Performance Monitor - always monitors for auto-optimization */}
+          <PerformanceMonitor
+            show={true}
+            onFPSDrop={handleFPSDrop}
+            fpsThreshold={30}
+            checkInterval={60}
+          />
+          
+          {/* Stats Panel - only show when user enables it */}
+          {showStats && <Stats showPanel={0} className="stats-panel" />}
         </ThinkingScene>
         
         {/* Node Detail Panel */}

@@ -10,9 +10,10 @@ import { useFrame } from '@react-three/fiber'
 import { useState, useRef, useEffect } from 'react'
 
 /**
- * PerformanceMonitor Component
+ * PerformanceMonitor Component - MUST be inside Canvas
+ * Only monitors FPS, does not render any DOM elements
  * 
- * @param {boolean} show - Whether to show the stats panel (default: true)
+ * @param {boolean} show - Whether monitoring is enabled (default: true)
  * @param {function} onFPSDrop - Callback when FPS drops below threshold
  * @param {number} fpsThreshold - FPS threshold for triggering callback (default: 30)
  * @param {number} checkInterval - How often to check FPS in frames (default: 60)
@@ -23,22 +24,21 @@ export default function PerformanceMonitor({
   fpsThreshold = 30,
   checkInterval = 60 
 }) {
-  const [currentFPS, setCurrentFPS] = useState(60)
   const frameCount = useRef(0)
   const lastTime = useRef(performance.now())
   const lowFPSDetected = useRef(false)
   const fpsHistory = useRef([])
 
-  // Monitor FPS
+  // Monitor FPS - only when enabled
   useFrame(() => {
+    if (!show) return
+    
     frameCount.current++
 
     if (frameCount.current >= checkInterval) {
       const now = performance.now()
       const deltaTime = now - lastTime.current
       const fps = Math.round((frameCount.current * 1000) / deltaTime)
-
-      setCurrentFPS(fps)
 
       // Keep FPS history (last 10 samples)
       fpsHistory.current.push(fps)
@@ -62,57 +62,8 @@ export default function PerformanceMonitor({
     }
   })
 
-  if (!show) return null
-
-  return (
-    <>
-      {/* Stats Panel from @react-three/drei */}
-      <Stats 
-        showPanel={0} // 0: fps, 1: ms, 2: mb
-        className="stats-panel"
-      />
-
-      {/* Custom FPS Warning */}
-      {currentFPS < fpsThreshold && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          padding: '10px 16px',
-          background: 'rgba(255, 107, 107, 0.9)',
-          color: '#fff',
-          borderRadius: '6px',
-          fontSize: '0.85rem',
-          fontWeight: 'bold',
-          zIndex: 1000,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          animation: 'pulse 1.5s ease-in-out infinite'
-        }}>
-          ⚠️ Low FPS: {currentFPS} (Optimizing...)
-        </div>
-      )}
-
-      <style>
-        {`
-          .stats-panel {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 9999 !important;
-          }
-
-          @keyframes pulse {
-            0%, 100% {
-              opacity: 1;
-            }
-            50% {
-              opacity: 0.7;
-            }
-          }
-        `}
-      </style>
-    </>
-  )
+  // IMPORTANT: Return null - this component must not render DOM elements inside Canvas
+  return null
 }
 
 /**
