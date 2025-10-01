@@ -92,41 +92,47 @@ class ThinkingParser:
         max_type = max(scores.items(), key=lambda x: x[1])
         return max_type[0] if max_type[1] > 0 else ThoughtType.ANALYSIS
     
-    def split_into_segments(self, text: str, min_words: int = 20) -> List[str]:
+    def split_into_segments(self, text: str, min_words: int = 4) -> List[str]:
         """
         Split thinking text into logical segments.
         
         Args:
             text: Raw thinking text
-            min_words: Minimum words per segment
+            min_words: Minimum words per segment (default: 15 for meaningful nodes)
             
         Returns:
             List of text segments
         """
-        # Split by sentence boundaries
-        sentences = re.split(r'[.!?]+\s+', text)
+        # Split by double line breaks (paragraph boundaries) OR sentence endings
+        # This creates more coherent segments
+        sentences = re.split(r'(?:\n\s*\n+)|(?:[.!?]+\s+)', text)
         
         segments = []
         current_segment = ""
         
         for sentence in sentences:
             sentence = sentence.strip()
-            if not sentence:
+            if not sentence or len(sentence) < 5:
                 continue
             
             # Add to current segment
             if current_segment:
-                current_segment += ". " + sentence
+                # Add proper punctuation between sentences
+                if not current_segment.endswith(('.', '!', '?', ':')):
+                    current_segment += ". "
+                else:
+                    current_segment += " "
+                current_segment += sentence
             else:
                 current_segment = sentence
             
-            # Check if we have enough words
+            # Check if we have enough words for a complete thought
             word_count = len(current_segment.split())
             if word_count >= min_words:
                 segments.append(current_segment)
                 current_segment = ""
         
-        # Add remaining text if substantial
+        # Add remaining text if substantial (at least half the minimum)
         if current_segment and len(current_segment.split()) >= min_words // 2:
             segments.append(current_segment)
         
@@ -168,22 +174,11 @@ class ThinkingParser:
     
     def generate_position(self) -> Position:
         """
-        Generate position for graph layout using simple counter-based layout.
-        
-        Returns:
-            Position object with x, y coordinates
+        Generate default position - D3 will calculate actual positions.
         """
-        position = Position(x=self.x_position, y=self.y_position)
         
-        # Increment x position
-        self.x_position += 200
-        
-        # Alternate y position every 3 nodes
-        if self.node_counter % 3 == 0:
-            self.y_position += 100
-            self.x_position = 0  # Reset x
-        
-        return position
+        # Return center position - D3-force will handle layout
+        return Position(x=0, y=0, z=0)
     
     async def parse_incremental(self, text_chunk: str) -> AsyncGenerator[ThoughtNode, None]:
         """
@@ -201,11 +196,20 @@ class ThinkingParser:
         # Try to extract complete segments
         segments = self.split_into_segments(self.accumulated_text)
         
-        # If we have complete segments, process them
-        if len(segments) > 1:
-            # Process all but the last segment (which might be incomplete)
-            complete_segments = segments[:-1]
-            self.accumulated_text = segments[-1]  # Keep incomplete segment
+        # Process complete segments more aggressively
+        if len(segments) >= 1:
+            # If we have 2+ segments, process all but the last (which might be incomplete)
+            # If we have 1 segment and it's long enough (40+ words), consider it complete
+            if len(segments) > 1:
+                complete_segments = segments[:-1]
+                self.accumulated_text = segments[-1]  # Keep incomplete segment
+            elif len(segments) == 1 and len(self.accumulated_text.split()) > 40:
+                # Single segment but substantial - process it and clear accumulator
+                complete_segments = segments
+                self.accumulated_text = ""
+            else:
+                # Single segment but not long enough yet
+                return
             
             for segment in complete_segments:
                 try:
