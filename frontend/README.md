@@ -154,7 +154,6 @@ frontend/
 │   │   ├── useCameraAnimation.js  # Camera controls
 │   │   └── useNodeInteraction.js  # Node interactions
 │   ├── utils/
-│   │   ├── layoutAlgorithm.js     # 3D node positioning
 │   │   ├── nodeColors.js          # Color mapping
 │   │   └── animations.js          # Animation helpers
 │   ├── store/

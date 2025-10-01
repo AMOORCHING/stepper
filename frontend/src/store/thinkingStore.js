@@ -5,34 +5,19 @@
  */
 
 import { create } from 'zustand'
-import { updateNodePositions } from '../utils/layoutAlgorithm'
 
 export const useThinkingStore = create((set, get) => ({
-  // Session state
+  nodes: [],
+  edges: [],
+  rawNodes: [],
   sessionId: null,
   isThinking: false,
   isComplete: false,
   solution: null,
   error: null,
-
-  // Nodes and edges
-  nodes: [],
-  edges: [],
-  rawNodes: [], // Nodes without calculated positions
-
-  // UI state
   selectedNodeId: null,
   focusedNodeId: null,
-
-  /**
-   * Set the session ID
-   */
-  setSessionId: (sessionId) => set({ sessionId }),
-
-  /**
-   * Add a new thought node
-   * Calculates position using layout algorithm
-   */
+  
   addNode: (nodeData) => {
     try {
       if (!nodeData) {
@@ -42,7 +27,13 @@ export const useThinkingStore = create((set, get) => ({
       
       const state = get()
       
-      // Create node with proper structure
+      // Check if node already exists
+      if (state.rawNodes.some(n => n.id === nodeData.id)) {
+        console.warn('Node already exists, skipping:', nodeData.id)
+        return null
+      }
+      
+      // Create node WITHOUT position (D3-force will calculate)
       const newNode = {
         id: nodeData.id || `node-${Date.now()}`,
         type: nodeData.type || 'Analysis',
@@ -54,23 +45,20 @@ export const useThinkingStore = create((set, get) => ({
       }
       
       console.log('Creating node in store:', newNode.id)
-
+  
       const newRawNodes = [...state.rawNodes, newNode]
       
-      // Build edges from dependencies
-      const newEdges = buildEdgesFromNodes(newRawNodes)
-      
-      // Calculate positions for all nodes
-      const nodesWithPositions = updateNodePositions(newRawNodes, newEdges)
-
+      // Build edges from ALL nodes (including new one)
+      const newEdges = buildEdgesFromNodes(newRawNodes)  // ✅ FIX HERE
+  
       set({
         rawNodes: newRawNodes,
-        nodes: nodesWithPositions,
+        nodes: newRawNodes,  // No positions - D3 handles layout
         edges: newEdges,
-        focusedNodeId: newNode.id // Focus on newest node
+        focusedNodeId: newNode.id
       })
-
-      console.log('Node added successfully. Total nodes:', nodesWithPositions.length)
+  
+      console.log('Node added successfully. Total nodes:', newRawNodes.length)
       return newNode
     } catch (error) {
       console.error('Error adding node:', error, 'nodeData:', nodeData)

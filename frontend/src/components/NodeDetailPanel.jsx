@@ -155,15 +155,6 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
           <div className="mb-4 p-2 bg-bg-tertiary rounded-md text-xs font-mono text-text-secondary break-all">
             ID: {node.id}
           </div>
-
-          {/* Interaction Hint */}
-          <div className="p-3 bg-accent-primary/10 border border-accent-primary/20 rounded-md text-sm">
-            <span className="text-base mr-2">💡</span>
-            <strong className="font-semibold">Tip:</strong>
-            <span className="text-text-secondary ml-1">
-              Double-click the node to focus camera on it
-            </span>
-          </div>
         </Card>
       </div>
     </>
