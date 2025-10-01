@@ -29,11 +29,20 @@ export default function ThinkingScene2D({ nodes = [], edges = [], onNodeClick, o
 
   // Node colors from design system
   const NODE_COLORS = {
-    Analysis: '#2563EB',
-    Decision: '#DC2626',
-    Verification: '#059669',
-    Alternative: '#D97706',
-    Implementation: '#7C3AED'
+    Analysis: '#000000',      // Black
+    Decision: '#DC2626',      // Red
+    Verification: '#059669',  // Green
+    Alternative: '#D97706',   // Orange
+    Implementation: '#000000' // Black
+  }
+
+  // Map node type to capital letter
+  const NODE_LETTERS = {
+    Analysis: 'A',
+    Decision: 'D',
+    Verification: 'V',
+    Alternative: 'L',
+    Implementation: 'I'
   }
 
   // Initialize Canvas and D3 simulation
@@ -307,7 +316,7 @@ export default function ThinkingScene2D({ nodes = [], edges = [], onNodeClick, o
     }
   }, [nodes, edges, dimensions, isReady])
 
-  // Draw node function with circuit-like styling
+  // Draw node function with solid circles and letters
   const drawNode = (ctx, node, state, isHovered) => {
     const { x, y, type, confidence } = node
     const baseRadius = 24
@@ -317,11 +326,12 @@ export default function ThinkingScene2D({ nodes = [], edges = [], onNodeClick, o
     // Normalize type - capitalize first letter to match NODE_COLORS keys
     const normalizedType = type ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase() : 'Analysis'
     const color = NODE_COLORS[normalizedType] || NODE_COLORS.Analysis
+    const letter = NODE_LETTERS[normalizedType] || 'A'
 
     ctx.save()
     ctx.globalAlpha = state.opacity
 
-    // Outer glow effect (circuit-like)
+    // Outer glow effect on hover
     if (isHovered) {
       const glowGradient = ctx.createRadialGradient(x, y, radius, x, y, radius + 15)
       glowGradient.addColorStop(0, color + '40') // 25% opacity
@@ -332,112 +342,61 @@ export default function ThinkingScene2D({ nodes = [], edges = [], onNodeClick, o
       ctx.fill()
     }
 
-    // Main node with gradient for depth
-    const nodeGradient = ctx.createRadialGradient(
-      x - radius * 0.3, 
-      y - radius * 0.3, 
-      0, 
-      x, 
-      y, 
-      radius
-    )
-    nodeGradient.addColorStop(0, color + 'FF') // Full opacity at top-left
-    nodeGradient.addColorStop(1, color + 'E6') // 90% opacity at edges
-    
-    ctx.fillStyle = nodeGradient
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)'
-    ctx.shadowBlur = isHovered ? 12 : 8
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 2
-    
+    // Main solid circle
+    ctx.fillStyle = color
     ctx.beginPath()
     ctx.arc(x, y, radius, 0, Math.PI * 2)
     ctx.fill()
 
-    // Reset shadow for stroke
-    ctx.shadowColor = 'transparent'
-    ctx.shadowBlur = 0
-
-    // White border with subtle inner glow
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)'
-    ctx.lineWidth = isHovered ? 3 : 2
-    ctx.stroke()
-
-    // Inner highlight for 3D effect
-    const highlightGradient = ctx.createRadialGradient(
-      x - radius * 0.4,
-      y - radius * 0.4,
-      0,
-      x,
-      y,
-      radius * 0.8
-    )
-    highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)')
-    highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
-    
-    ctx.fillStyle = highlightGradient
-    ctx.beginPath()
-    ctx.arc(x, y, radius, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Active pulse ring
-    if (isHovered) {
-      ctx.strokeStyle = color + '80' // 50% opacity
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.arc(x, y, radius + 8, 0, Math.PI * 2)
-      ctx.stroke()
-    }
+    // Draw white capital letter in center
+    ctx.fillStyle = '#FFFFFF'
+    ctx.font = `bold ${radius * 0.8}px sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(letter, x, y)
 
     ctx.restore()
   }
 
-  // Draw edge function with circuit-like styling
+  // Draw edge function with straight lines and color-coded gradients
   const drawEdge = (ctx, source, target, edge, state) => {
     const { drawProgress } = state
-    const strength = edge.strength || 0.5
 
-    // Calculate control point for bezier curve
-    const dx = target.x - source.x
-    const dy = target.y - source.y
-    const curvature = 0.15
-
-    const cpx = (source.x + target.x) / 2 + (-dy * curvature)
-    const cpy = (source.y + target.y) / 2 + (dx * curvature)
+    // Determine target node type for edge coloring
+    const targetNode = nodes.find(n => n.id === edge.to)
+    const normalizedTargetType = targetNode?.type ? 
+      targetNode.type.charAt(0).toUpperCase() + targetNode.type.slice(1).toLowerCase() : 'Analysis'
+    const targetColor = NODE_COLORS[normalizedTargetType] || NODE_COLORS.Analysis
 
     ctx.save()
     
-    // Circuit trace styling - subtle gradient
+    // Create gradient from black to target node color
     const gradient = ctx.createLinearGradient(source.x, source.y, target.x, target.y)
-    gradient.addColorStop(0, 'rgba(200, 200, 200, 0.4)')
-    gradient.addColorStop(0.5, 'rgba(220, 220, 220, 0.6)')
-    gradient.addColorStop(1, 'rgba(200, 200, 200, 0.4)')
+    
+    // Check if target is a special colored node
+    if (normalizedTargetType === 'Verification' || normalizedTargetType === 'Alternative' || normalizedTargetType === 'Decision') {
+      gradient.addColorStop(0, '#000000') // Black at source
+      gradient.addColorStop(1, targetColor) // Target color at destination
+    } else {
+      // Default black line
+      gradient.addColorStop(0, '#000000')
+      gradient.addColorStop(1, '#000000')
+    }
     
     ctx.strokeStyle = gradient
-    ctx.lineWidth = 2 + (strength * 0.5)
+    ctx.lineWidth = 2
     ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    // Subtle glow for circuit effect
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)'
-    ctx.shadowBlur = 3
 
     ctx.beginPath()
     ctx.moveTo(source.x, source.y)
     
     if (drawProgress < 1) {
-      // Animate along the curve
-      const t = drawProgress
-      const curveX = (1 - t) * (1 - t) * source.x + 2 * (1 - t) * t * cpx + t * t * target.x
-      const curveY = (1 - t) * (1 - t) * source.y + 2 * (1 - t) * t * cpy + t * t * target.y
-      ctx.quadraticCurveTo(
-        source.x + (cpx - source.x) * t,
-        source.y + (cpy - source.y) * t,
-        curveX,
-        curveY
-      )
+      // Animate drawing progress
+      const currentX = source.x + (target.x - source.x) * drawProgress
+      const currentY = source.y + (target.y - source.y) * drawProgress
+      ctx.lineTo(currentX, currentY)
     } else {
-      ctx.quadraticCurveTo(cpx, cpy, target.x, target.y)
+      ctx.lineTo(target.x, target.y)
     }
     
     ctx.stroke()

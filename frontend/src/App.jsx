@@ -44,18 +44,20 @@ function App() {
     isThinking,
     isComplete,
     error,
-    addNode,
+    enqueueNode,
     setComplete,
     setError,
-    reset: resetStore
+    reset: resetStore,
+    animationDelay,
+    setAnimationDelay
   } = useThinkingStore()
   
   // WebSocket integration
   const { isConnected, connectionError } = useWebSocket({
     sessionId: useWebSocketMode ? sessionId : null,
     onNewThought: (thought) => {
-      console.log('Adding node to store:', thought?.id)
-      addNode(thought)
+      console.log('Enqueueing node from WebSocket:', thought?.id)
+      enqueueNode(thought)
     },
     onThinkingComplete: (data) => {
       console.log('Thinking complete:', data)
@@ -223,6 +225,36 @@ function App() {
                     </span>
                   </div>
                 )}
+              </div>
+            </section>
+
+            <section className="mt-8">
+              <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide mb-4">
+                Animation Settings
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-text-secondary">Node Delay</span>
+                    <span className="text-xs font-semibold text-text-primary">{animationDelay}ms</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="50"
+                    value={animationDelay}
+                    onChange={(e) => setAnimationDelay(Number(e.target.value))}
+                    className="w-full h-2 bg-bg-tertiary rounded-lg appearance-none cursor-pointer accent-accent-primary"
+                  />
+                  <div className="flex justify-between text-xs text-text-secondary mt-1">
+                    <span>Instant</span>
+                    <span>Slow</span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-2">
+                    Controls the delay between nodes appearing when receiving rapid updates
+                  </p>
+                </div>
               </div>
             </section>
 

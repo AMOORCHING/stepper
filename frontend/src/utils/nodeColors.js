@@ -7,11 +7,11 @@
  */
 
 export const NODE_COLORS = {
-  Analysis: '#2563EB',      // Blue - analytical thinking
+  Analysis: '#000000',      // Black - analytical thinking
   Decision: '#DC2626',      // Red - decision points
   Verification: '#059669',  // Green - verification steps
   Alternative: '#D97706',   // Orange - alternative approaches
-  Implementation: '#7C3AED' // Purple - implementation details
+  Implementation: '#000000' // Black - implementation details
 }
 
 /**

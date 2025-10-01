@@ -122,11 +122,11 @@ function Metric({ label, value, valueRef }) {
  */
 export function Legend() {
     const nodeTypes = {
-      Analysis: '#2563EB',
+      Analysis: '#000000',
       Decision: '#DC2626',
       Verification: '#059669',
       Alternative: '#D97706',
-      Implementation: '#7C3AED'
+      Implementation: '#000000'
     }
   
     return (
@@ -147,18 +147,17 @@ export function Legend() {
           fontWeight: '600',
           color: '#1A1A1A',
           marginBottom: '12px',
-          margin: 0
         }}>
           Thought Types
         </h4>
-        {Object.entries(nodeTypes).map(([type, color]) => (
+        {Object.entries(nodeTypes).map(([type, color], index, array) => (
           <div
             key={type}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              marginBottom: '8px'
+              marginBottom: index === array.length - 1 ? '0' : '8px'
             }}
           >
             <span

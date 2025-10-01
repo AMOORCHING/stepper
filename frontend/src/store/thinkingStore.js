@@ -18,10 +18,85 @@ export const useThinkingStore = create((set, get) => ({
   selectedNodeId: null,
   focusedNodeId: null,
   
-  addNode: (nodeData) => {
+  // Queue system for smooth animations
+  nodeQueue: [],
+  isProcessingQueue: false,
+  animationDelay: 250, // milliseconds between each node animation
+  
+  /**
+   * Add node to queue (called by WebSocket)
+   * Nodes will be processed with animation delay
+   */
+  enqueueNode: (nodeData) => {
     try {
       if (!nodeData) {
-        console.error('addNode called with null/undefined nodeData')
+        console.error('enqueueNode called with null/undefined nodeData')
+        return
+      }
+      
+      const state = get()
+      
+      // Check if node already exists or is in queue
+      const alreadyExists = state.rawNodes.some(n => n.id === nodeData.id)
+      const inQueue = state.nodeQueue.some(n => n.id === nodeData.id)
+      
+      if (alreadyExists || inQueue) {
+        console.warn('Node already exists or is queued, skipping:', nodeData.id)
+        return
+      }
+      
+      console.log('📥 Enqueueing node:', nodeData.id)
+      
+      set({ nodeQueue: [...state.nodeQueue, nodeData] })
+      
+      // Start processing if not already processing
+      if (!state.isProcessingQueue) {
+        get().processNodeQueue()
+      }
+    } catch (error) {
+      console.error('Error enqueueing node:', error, 'nodeData:', nodeData)
+    }
+  },
+
+  /**
+   * Process the node queue with animation delays
+   */
+  processNodeQueue: async () => {
+    const state = get()
+    
+    if (state.isProcessingQueue || state.nodeQueue.length === 0) {
+      return
+    }
+    
+    set({ isProcessingQueue: true })
+    
+    while (get().nodeQueue.length > 0) {
+      const state = get()
+      const [nodeData, ...remainingQueue] = state.nodeQueue
+      
+      // Remove from queue
+      set({ nodeQueue: remainingQueue })
+      
+      // Add node immediately
+      console.log('✨ Processing queued node:', nodeData.id)
+      get().addNodeImmediate(nodeData)
+      
+      // Wait before processing next node
+      if (remainingQueue.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, state.animationDelay))
+      }
+    }
+    
+    set({ isProcessingQueue: false })
+  },
+
+  /**
+   * Immediately add node to store (internal use)
+   */
+  addNodeImmediate: (nodeData) => {
+    try {
+      if (!nodeData) {
+        console.error('addNodeImmediate called with null/undefined nodeData')
         return null
       }
       
@@ -49,7 +124,7 @@ export const useThinkingStore = create((set, get) => ({
       const newRawNodes = [...state.rawNodes, newNode]
       
       // Build edges from ALL nodes (including new one)
-      const newEdges = buildEdgesFromNodes(newRawNodes)  // ✅ FIX HERE
+      const newEdges = buildEdgesFromNodes(newRawNodes)
   
       set({
         rawNodes: newRawNodes,
@@ -64,6 +139,21 @@ export const useThinkingStore = create((set, get) => ({
       console.error('Error adding node:', error, 'nodeData:', nodeData)
       return null
     }
+  },
+  
+  /**
+   * Add node directly (for non-WebSocket usage)
+   * Alias for addNodeImmediate for backward compatibility
+   */
+  addNode: (nodeData) => {
+    return get().addNodeImmediate(nodeData)
+  },
+  
+  /**
+   * Set the animation delay between nodes
+   */
+  setAnimationDelay: (delay) => {
+    set({ animationDelay: Math.max(0, delay) })
   },
 
   /**
@@ -94,7 +184,9 @@ export const useThinkingStore = create((set, get) => ({
     edges: [],
     rawNodes: [],
     focusedNodeId: null,
-    selectedNodeId: null
+    selectedNodeId: null,
+    nodeQueue: [],
+    isProcessingQueue: false
   }),
 
   /**
@@ -152,7 +244,9 @@ export const useThinkingStore = create((set, get) => ({
     edges: [],
     rawNodes: [],
     selectedNodeId: null,
-    focusedNodeId: null
+    focusedNodeId: null,
+    nodeQueue: [],
+    isProcessingQueue: false
   })
 }))
 

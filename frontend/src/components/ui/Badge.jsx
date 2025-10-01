@@ -8,22 +8,24 @@
  * @param {'analysis' | 'decision' | 'verification' | 'alternative' | 'implementation' | 'default'} props.variant - Badge color variant (default: 'default')
  * @param {'sm' | 'md' | 'lg'} props.size - Badge size (default: 'md')
  * @param {string} props.className - Additional CSS classes
+ * @param {string} props.color - Custom background color (overrides variant)
  */
 export default function Badge({ 
   children, 
   variant = 'default',
   size = 'md',
-  className = ''
+  className = '',
+  color
 }) {
-  const baseClasses = 'inline-block font-semibold uppercase tracking-wide rounded';
+  const baseClasses = 'inline-block font-semibold uppercase tracking-wide rounded-sm';
   
-  const variantClasses = {
-    analysis: 'bg-node-analysis text-white',
-    decision: 'bg-node-decision text-white',
-    verification: 'bg-node-verification text-white',
-    alternative: 'bg-node-alternative text-white',
-    implementation: 'bg-node-implementation text-white',
-    default: 'bg-bg-tertiary text-text-primary border border-border-default'
+  const variantColors = {
+    analysis: '#000000',
+    decision: '#DC2626',
+    verification: '#059669',
+    alternative: '#D97706',
+    implementation: '#000000',
+    default: null
   };
   
   const sizeClasses = {
@@ -32,10 +34,16 @@ export default function Badge({
     lg: 'px-3 py-1.5 text-sm'
   };
   
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  const bgColor = color || variantColors[variant];
+  const defaultClasses = variant === 'default' ? 'bg-bg-tertiary text-text-primary border border-border-default' : '';
+  
+  const classes = `${baseClasses} ${sizeClasses[size]} ${defaultClasses} ${className}`;
   
   return (
-    <span className={classes}>
+    <span 
+      className={classes}
+      style={bgColor ? { backgroundColor: bgColor, color: 'white' } : {}}
+    >
       {children}
     </span>
   );

@@ -1,7 +1,7 @@
 /**
  * NodeDetailPanel - Floating panel showing detailed node information
  * 
- * Displays node content, type, confidence, keywords, and dependencies
+ * Displays node content, type, confidence, and keywords
  * Opens on click and can be closed by clicking outside or pressing Escape
  */
 
@@ -65,7 +65,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
 
           {/* Node Type Badge */}
           <div className="mb-4">
-            <Badge variant={node.type.toLowerCase()} size="md">
+            <Badge variant={node.type.toLowerCase()} size="md" color={color}>
               {node.type}
             </Badge>
           </div>
@@ -76,7 +76,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               <span className="text-text-secondary">Confidence</span>
               <span className="font-semibold text-text-primary">{confidencePercent}%</span>
             </div>
-            <div className="w-full h-2 bg-bg-tertiary rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-bg-tertiary rounded-sm overflow-hidden">
               <div 
                 className="h-full transition-all duration-normal"
                 style={{
@@ -92,14 +92,14 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
             <h4 className="text-sm font-medium text-text-secondary mb-2">
               Content
             </h4>
-            <p className="m-0 p-3 bg-bg-tertiary rounded-md text-sm leading-normal whitespace-pre-wrap break-words">
+            <p className="m-0 p-3 bg-bg-tertiary rounded-sm text-sm leading-normal whitespace-pre-wrap break-words">
               {node.content || 'No content available'}
             </p>
           </div>
 
           {/* Keywords */}
           {node.keywords && node.keywords.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h4 className="text-sm font-medium text-text-secondary mb-2">
                 Keywords
               </h4>
@@ -107,7 +107,7 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
                 {node.keywords.map((keyword, index) => (
                   <span
                     key={index}
-                    className="px-2.5 py-1 bg-bg-tertiary border border-border-subtle rounded text-xs"
+                    className="px-2.5 py-1 bg-bg-tertiary border border-border-subtle rounded-sm text-xs"
                   >
                     {keyword}
                   </span>
@@ -115,46 +115,6 @@ export default function NodeDetailPanel({ node, onClose, position = 'right' }) {
               </div>
             </div>
           )}
-
-          {/* Dependencies */}
-          {node.dependencies && node.dependencies.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-text-secondary mb-2">
-                Dependencies
-              </h4>
-              <div className="p-3 bg-bg-tertiary rounded-md text-sm">
-                {node.dependencies.map((depId, index) => (
-                  <div key={index} className="py-1 font-mono text-xs">
-                    → {depId}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Position Info */}
-          {node.position && (
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-text-secondary mb-2">
-                Position
-              </h4>
-              <div className="grid grid-cols-2 gap-2 p-3 bg-bg-tertiary rounded-md text-xs font-mono text-center">
-                <div>
-                  <div className="text-text-secondary mb-1">X</div>
-                  <div className="text-text-primary">{node.position.x.toFixed(2)}</div>
-                </div>
-                <div>
-                  <div className="text-text-secondary mb-1">Y</div>
-                  <div className="text-text-primary">{node.position.y.toFixed(2)}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Node ID */}
-          <div className="mb-4 p-2 bg-bg-tertiary rounded-md text-xs font-mono text-text-secondary break-all">
-            ID: {node.id}
-          </div>
         </Card>
       </div>
     </>
