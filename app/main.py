@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import websocket
+from app.api import websocket, routes
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -18,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount API routes
+app.include_router(routes.router)
 
 # Mount WebSocket routes
 app.include_router(websocket.router)
